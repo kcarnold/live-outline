@@ -2,7 +2,7 @@
 class AudioChunkProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
-        this.bufferSize = 22050 * 2; // 500ms at 44.1kHz
+        this.bufferSize = 22050 * 4; // 500ms at 44.1kHz
         this.buffer = new Float32Array(this.bufferSize);
         this.bufferIndex = 0;
         this.chunkCounter = 0;
