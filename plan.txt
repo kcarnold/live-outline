@@ -1,0 +1,275 @@
+Below is a comprehensive blueprint along with an iterative, incremental breakdown. The final result is a series of separate, self-contained prompts (each wrapped in “text” code tags) that you can feed to a code-generation LLM. Each prompt builds on previous steps, includes testing, and wires components together so that nothing is left “orphaned.”
+
+---
+
+## Step-by-Step High-Level Blueprint
+
+1. • Set up a new project and core backend infrastructure (Phase 1).  
+   – Create a basic Node.js/TypeScript (or JavaScript) project.  
+   – Implement a WebSocket server that accepts client connections.  
+   – Design a shared in-memory state object to hold:  
+    • Transcript text  
+    • Outline text  
+    • Last processed transcript position  
+    • Editor focus lock status  
+    • Role management (IDs for editor and audio capturer)  
+   – Implement initial WebSocket message routing and basic error responses.  
+   – Write unit tests for state management and message serialization.
+
+2. • Add role management features.  
+   – Implement message handlers for “CLAIM_EDITOR_ROLE”, “CLAIM_AUDIO_ROLE”, and “RELEASE_ROLE”.  
+   – Code broadcasts for ROLE_UPDATE messages.  
+   – Write unit tests to verify role claiming, releasing, and broadcast updates.
+
+3. • Integrate audio streaming in the frontend (Phase 2).  
+   – Build a minimal React client that uses the browser API (getUserMedia) to capture audio.  
+   – Stream audio chunks and dispatch “TRANSCRIPT_CHUNK” messages over WebSocket.  
+   – On the backend, accumulate chunks (simulate AssemblyAI responses at first).
+
+4. • Accumulate transcripts and trigger outline updates.  
+   – Create logic that tracks the processed transcript position.  
+   – Configure update triggers (e.g., after N complete sentences or M words).  
+   – Write unit tests that simulate transcript input and ensure the trigger triggers at the correct moment.
+
+5. • Integrate OpenAI for outline updates (Phase 3).  
+   – On update trigger (and if no editor focus lock exists), prepare a prompt that includes:  
+    • The full transcript history  
+    • The current outline  
+   – Wire OpenAI API calls (or stub them for testing).  
+   – On receiving a response, update the canonical outline (unless an editor focus lock is active).  
+   – Write tests that simulate LLM responses and check correct outline update behavior.
+
+6. • Enforce editor focus lock.  
+   – When an “EDITOR_FOCUS” message is received, set the lock.  
+   – Discard in-flight OpenAI updates if the lock is active.  
+   – When “EDITOR_BLUR” is received, remove the lock and update the canonical outline.  
+   – Create tests for these edge cases.
+
+7. • Wire client–server synchronization.  
+   – The backend sends “STATE_UPDATE” messages whenever the transcript or outline changes.  
+   – The frontend listens to these messages to update its view.  
+   – Write integration tests (or use a WebSocket mock) for multi-client state sync.
+
+8. • Testing & polishing (Phase 4).  
+   – Write unit tests for each module.  
+   – Build integration tests that simulate multiple client sessions (editor, audio capturer, viewer).  
+   – Use E2E test frameworks (like Cypress) for full-flow tests.  
+   – Add robust error handling for network issues and API failures.
+
+---
+
+## Iterative Breakdown into Small, Actionable Steps
+
+Below is a further breakdown into incremental chunks. Each “chunk” is sufficiently small for early testing yet big enough to move the project along:
+
+1. Basic backend project setup (initial npm/TS configuration) & WebSocket server skeleton.  
+   • Implement a barebones WebSocket server that accepts connections and returns a “welcome” state update.
+   
+2. In-memory state design and simple message handling.  
+   • Define the state interface (transcript, outline, roles, etc.).  
+   • Create handlers for a couple of “dummy” message types and wire a unit test to verify state updates.
+
+3. Role management functionality.  
+   • Implement message handlers for “CLAIM_EDITOR_ROLE”, “CLAIM_AUDIO_ROLE”, “RELEASE_ROLE”.  
+   • Broadcast ROLE_UPDATE messages and write tests that simulate role changes.
+
+4. Frontend minimal integration.  
+   • Scaffold a small React app.  
+   • Connect to the WebSocket server and display a simple “connected” message.  
+   • Write a basic test that confirms the connection from the browser.
+
+5. Audio capture integration.  
+   • Add code in React to capture audio using getUserMedia.  
+   • Stream dummy audio chunks as “TRANSCRIPT_CHUNK” messages to the backend.  
+   • Test that the backend receives and logs these chunks.
+
+6. Transcript accumulation logic.  
+   • Update the state with incoming “TRANSCRIPT_CHUNK” messages.  
+   • Implement trigger logic for outline updates (simulate with simple counters).  
+   • Unit test the trigger with preset transcript inputs.
+
+7. Outline generation integration with OpenAI API stubs.  
+   • Create an interface to prepare a request payload (transcript and current outline).  
+   • Stub an OpenAI endpoint that returns a dummy outline update.  
+   • Integrate the response back into the state and test the update.
+
+8. Editor focus lock.  
+   • Implement handlers for “EDITOR_FOCUS” and “EDITOR_BLUR”.  
+   • Test that when focus is locked, new outline updates are not applied.  
+   • Wire this with the dummy OpenAI integration to simulate discarding in-flight updates.
+
+9. Client–server state synchronization.  
+   • Ensure that every state change is broadcast as a “STATE_UPDATE” message to all connected clients.  
+   • Simulate multiple client connections to test synchronous updates.
+
+10. End-to-end wiring and full integration tests.  
+    • Combine all prior steps to mimic a real session: audio capture → transcript accumulation → LLM outline update → editor interactions.  
+    • Develop integration tests (or use manual demo flows) that validate the entire flow.
+
+---
+
+## Final Series of Prompts for a Code-Generation LLM
+
+Below are the separate prompt sections. Each is self-contained, builds on previous work, and ends with wiring components together. Each prompt is tagged as text using code tags.
+
+---
+
+```
+[text]
+Prompt 1: Basic Project Setup and WebSocket Server
+
+Task:
+• Initialize a new Node.js project with TypeScript (or JavaScript if preferred). 
+• Set up a basic WebSocket server (e.g., using the 'ws' library) that accepts client connections.
+• Define a minimal in-memory state object that contains at least a transcript string and outline string.
+• On client connection, emit a welcome message (e.g., as a "STATE_UPDATE") with the current state.
+• Write a simple unit test (using Jest) that starts the server, connects a dummy client, and verifies that the welcome message is received.
+
+Ensure that best practices (such as organizing code into modules) are followed. At the end of this prompt, the basic WebSocket server should be wired up and testable.
+```
+
+---
+
+```
+[text]
+Prompt 2: Implementing Role Management
+
+Task:
+• Build on the backend code from Prompt 1.
+• Define the role management state: include editorId and audioCapturerId.
+• Implement WebSocket message handlers for "CLAIM_EDITOR_ROLE", "CLAIM_AUDIO_ROLE", and "RELEASE_ROLE". Update the state accordingly.
+• Broadcast a "ROLE_UPDATE" message to all connected clients whenever a role claim or release occurs.
+• Write unit tests to simulate multiple clients claiming/releasing roles and verify that state changes and ROLE_UPDATE messages are correctly broadcast.
+• At the end, ensure that role management is wired into the WebSocket server and can be invoked via test clients.
+```
+
+---
+
+```
+[text]
+Prompt 3: Client Message Processing and Error Handling
+
+Task:
+• Extend the backend to fully parse and validate incoming WebSocket messages.
+• Define Typescript interfaces (or JSDoc types) for ClientMessage (e.g., for "EDITOR_FOCUS", "EDITOR_BLUR", "OUTLINE_UPDATE", "TRANSCRIPT_CHUNK").
+• Add error handling so that unrecognized message types or malformed messages result in an "ERROR" message to the client.
+• Write unit tests that send various valid and invalid messages to the server, ensuring correct handling and appropriate error responses.
+• Ensure this message processing system is integrated with the state management from the previous prompts.
+```
+
+---
+
+```
+[text]
+Prompt 4: Minimal Frontend Integration & WebSocket Connectivity
+
+Task:
+• Create a minimal React application that connects to the backend WebSocket server.
+• Implement a component that:
+    – Establishes a WebSocket connection on mount.
+    – Displays a simple status (e.g., "Connected" or "Disconnected") based on connection state.
+    – Listens for state updates (STATE_UPDATE messages) and displays the transcript and outline.
+• Write a simple test (using your preferred React testing library) that mounts the component and verifies it responds to a simulated STATE_UPDATE.
+• Wire the connection code so that it integrates with the backend developed in previous prompts.
+```
+
+---
+
+```
+[text]
+Prompt 5: Audio Capture Integration in the Frontend
+
+Task:
+• Extend the React application to capture audio using the browser's getUserMedia API.
+• Implement functionality in a dedicated component to:
+    – Request microphone access.
+    – Stream audio chunks (or simulate them at first) and send them via WebSocket as "TRANSCRIPT_CHUNK" messages (include text and a timestamp).
+• Write tests (or use a stub/mock) to simulate the audio capture process and verify that "TRANSCRIPT_CHUNK" messages are sent.
+• Ensure this feature is integrated with the WebSocket connection from Prompt 4.
+```
+
+---
+
+```
+[text]
+Prompt 6: Transcript Accumulation and Update Trigger Logic
+
+Task:
+• On the backend, extend your state management to accumulate transcript chunks received via the "TRANSCRIPT_CHUNK" message.
+• Implement logic to track the last processed transcript position.
+• Add update triggers that check if either:
+    – A configurable number of complete sentences (e.g., 3) have been received, or
+    – A configurable number of words (e.g., 100) have been added.
+• Write unit tests to simulate the arrival of transcript chunks and verify that the triggering conditions are correctly identified.
+• At the end of this prompt, the transcript accumulation with trigger logic should be wired into the existing WebSocket message handlers.
+```
+
+---
+
+```
+[text]
+Prompt 7: OpenAI Outline Update Integration
+
+Task:
+• Integrate an interface to call the OpenAI API for outline updates.
+• When transcript update conditions are met (from Prompt 6) and if no editor focus lock is active, prepare a request using:
+    – The full transcript history.
+    – The current outline.
+    – A base prompt (as specified in the project spec).
+• Stub or simulate the API call to return a dummy outline update.
+• On receiving a response, update the canonical outline in the backend state.
+• Write tests to simulate the OpenAI response and verify that the outline is updated correctly.
+• Ensure the new outline update logic is properly integrated with the transcript trigger logic and state management.
+```
+
+---
+
+```
+[text]
+Prompt 8: Implementing Editor Focus Lock and Manual Outline Updates
+
+Task:
+• Build handlers for "EDITOR_FOCUS" and "EDITOR_BLUR" messages.
+    – When "EDITOR_FOCUS" is received, set a focus lock to prevent automated outline changes.
+    – When "EDITOR_BLUR" is received, remove the lock and set the current outline as canonical.
+• Modify the OpenAI outline update integration (from Prompt 7) to check the focus lock status, discarding updates if the lock is active.
+• Allow a client to send "OUTLINE_UPDATE" messages to manually update the outline when the editor is active.
+• Write tests to simulate the scenario: send focus commands, attempt to update outline using OpenAI, then blur and confirm that manual updates are accepted.
+• Wire these changes into the main server logic ensuring they interact with state and role management.
+```
+
+---
+
+```
+[text]
+Prompt 9: Client–Server State Synchronization for Multi-Client Support
+
+Task:
+• Ensure that every change to the backend state (transcript, outline, roles, editor focus lock) triggers a "STATE_UPDATE" message to all connected clients.
+• Update the WebSocket server so that it efficiently broadcasts state changes.
+• Write integration tests that simulate multiple WebSocket clients.
+    – Verify that when one client causes a state change (e.g., a transcript chunk received or role update), all connected clients receive updated state.
+• Wire these synchronization features into both the backend and the minimal React frontend.
+```
+
+---
+
+```
+[text]
+Prompt 10: End-to-End Integration and Testing
+
+Task:
+• Bring together all components:
+    – The backend WebSocket server with state management, role management, transcript accumulation, OpenAI integration, and editor focus lock.
+    – The frontend React application that connects to the WebSocket server, captures audio, and displays transcript and outline.
+• Write end-to-end tests (or script manual demonstration flows) that simulate a full session:
+    – A client claims the audio role and sends transcript chunks.
+    – Another client claims the editor role and changes focus.
+    – Outline updates from the simulated OpenAI integration are applied when appropriate.
+    – Role updates and state synchronization across multiple clients occur without error.
+• Ensure that all subsystems are wired together so that there is no orphaned or unintegrated code.
+```
+
+---
+
+This set of prompts provides a clear, incremental, and test-driven path to build a real-time speech-to-outline application. By following these prompts in order, you guarantee that every new feature builds on robust, well-tested previous functionality.
