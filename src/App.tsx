@@ -90,7 +90,10 @@ function App() {
       }
       setTranscript(msg)
       if (ws.current) {
-        ws.current.send(JSON.stringify({ type: 'transcript-update', transcript: msg }));
+        console.log('sending transcript update');
+        ws.current.send(JSON.stringify({ type: 'update-transcript', text: msg }));
+      } else {
+        console.warn('WebSocket connection not established');
       }
     });
 
