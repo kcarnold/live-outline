@@ -51,7 +51,11 @@ wss.on('connection', (ws) => {
       const message = JSON.parse(data);
       await handleMessage(message, ws);
     } catch (error) {
-      ws.send(JSON.stringify({ type: 'error', error: error.message }));
+      console.error('Message handling error:', error);
+      ws.send(JSON.stringify({ 
+        type: 'error', 
+        error: error.message
+      }));
     }
   });
 

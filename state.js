@@ -52,7 +52,7 @@ export function handleMessage(message, ws) {
       break;
 
     default:
-      throw new Error('Unknown message type');
+      throw new Error('Unknown message type' + message.type);
   }
 
   broadcastState();
