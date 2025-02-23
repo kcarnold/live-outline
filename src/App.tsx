@@ -96,7 +96,6 @@ function App() {
     <div className="App">
       <header>
         <h1 className="header__title">Real-Time Transcription</h1>
-        <p className="header__sub-title">Try AssemblyAI's new real-time transcription endpoint!</p>
       </header>
       <div className="real-time-interface">
         <p id="real-time-title" className="real-time-interface__title">Click start to begin recording!</p>
