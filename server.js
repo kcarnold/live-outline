@@ -4,6 +4,8 @@ import { join, dirname } from "path";
 import { AssemblyAI } from "assemblyai";
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { WebSocketServer } from 'ws';
+import { handleMessage, broadcastState } from './state.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,4 +31,22 @@ const server = app.listen(app.get("port"), () => {
   console.log(
     `Server is running on port http://localhost:${server.address().port}`,
   );
+});
+
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', (ws) => {
+  ws.on('message', async (data) => {
+    try {
+      const message = JSON.parse(data);
+      await handleMessage(message, ws);
+    } catch (error) {
+      ws.send(JSON.stringify({ type: 'error', error: error.message }));
+    }
+  });
+
+  ws.on('close', () => {
+    // Handle disconnection in state management
+    handleMessage({ type: 'disconnect' }, ws);
+  });
 });
