@@ -1,11 +1,58 @@
 import './App.css';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { RealtimeTranscriber } from 'assemblyai/streaming';
 import RecordRTC from 'recordrtc';
 
 function App() {
+  const ws = useRef<WebSocket | null>(null);
+  const [serverState, setServerState] = useState({
+    transcript: '',
+    outline: '',
+    editorLocked: false,
+    roles: {
+      editor: false,
+      audioCapturer: false
+    }
+  });
+
+  useEffect(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/socket`;
+    
+    try {
+      ws.current = new WebSocket(wsUrl);
+      
+      ws.current.onopen = () => {
+        if (!ws.current) return;
+        ws.current.send(JSON.stringify({ type: 'connect' }));
+        console.log('WebSocket connected');
+      };
+
+      ws.current.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === 'state-update') {
+          setServerState(message.state);
+        }
+      };
+
+      ws.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+    }
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+        ws.current = null;
+      }
+    };
+  }, []);
+
   /** @type {React.MutableRefObject<RealtimeTranscriber>} */
-  const realtimeTranscriber = useRef(null)
+  const realtimeTranscriber = useRef<RealtimeTranscriber | null>(null);
   /** @type {React.MutableRefObject<RecordRTC>} */
   const recorder = useRef(null)
   const [isRecording, setIsRecording] = useState(false)
@@ -23,6 +70,9 @@ function App() {
   };
 
   const startTranscription = async () => {
+    if (!ws.current) return;
+    ws.current.send(JSON.stringify({ type: 'claim-role', role: 'audioCapturer' }));
+    
     realtimeTranscriber.current = new RealtimeTranscriber({
       token: await getToken(),
       sampleRate: 16_000,
@@ -41,11 +91,15 @@ function App() {
         }
       }
       setTranscript(msg)
+      if (ws.current) {
+        ws.current.send(JSON.stringify({ type: 'transcript-update', transcript: msg }));
+      }
     });
 
     realtimeTranscriber.current.on('error', event => {
       console.error(event);
-      realtimeTranscriber.current.close();
+      if (realtimeTranscriber.current)
+        realtimeTranscriber.current.close();
       realtimeTranscriber.current = null;
     });
 

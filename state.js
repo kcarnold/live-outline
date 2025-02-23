@@ -75,4 +75,5 @@ export function broadcastState() {
     stateUpdate.roles.audioCapturer = state.roles.audioCapturer === client;
     client.send(JSON.stringify({ type: 'state-update', state: stateUpdate }));
   }
+  console.log('Broadcasted state:', stateUpdate);
 }

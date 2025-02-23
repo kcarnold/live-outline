@@ -26,16 +26,26 @@ app.get("/token", async (_req, res) => {
   res.json({ token });
 });
 
-app.set("port", 8000);
+const PORT = process.env.PORT || 8000;
+app.set("port", PORT);
+
 const server = app.listen(app.get("port"), () => {
-  console.log(
-    `Server is running on port http://localhost:${server.address().port}`,
-  );
+  console.log(`HTTP/WS Server running on http://localhost:${PORT}`);
+}).on('error', (error) => {
+  console.error('Server error:', error);
 });
 
 const wss = new WebSocketServer({ server });
 
+wss.on('error', (error) => {
+  console.error('WebSocket Server error:', error);
+});
+
 wss.on('connection', (ws) => {
+  ws.isAlive = true;
+  console.log('Client connected');
+  ws.on('pong', () => ws.isAlive = true);
+
   ws.on('message', async (data) => {
     try {
       const message = JSON.parse(data);
