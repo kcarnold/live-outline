@@ -51,10 +51,8 @@ function App() {
     };
   }, []);
 
-  /** @type {React.MutableRefObject<RealtimeTranscriber>} */
   const realtimeTranscriber = useRef<RealtimeTranscriber | null>(null);
-  /** @type {React.MutableRefObject<RecordRTC>} */
-  const recorder = useRef(null)
+  const recorder = useRef<RecordRTC | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [transcript, setTranscript] = useState('')
 
@@ -138,10 +136,12 @@ function App() {
     event.preventDefault();
     setIsRecording(false)
 
-    await realtimeTranscriber.current.close();
+    if (realtimeTranscriber.current)
+      await realtimeTranscriber.current.close();
     realtimeTranscriber.current = null;
 
-    recorder.current.pauseRecording();
+    if (recorder.current)
+      recorder.current.pauseRecording();
     recorder.current = null;
   }
 
