@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { WebSocketServer } from 'ws';
 import { handleMessage, broadcastState } from './state.js';
+import { DocumentManager } from '@y-sweet/sdk'
+
+const documentManager = new DocumentManager(process.env.YSWEET_CONNECTION_STRING);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,10 +24,25 @@ app.use(
 );
 app.use(json());
 
+// AAI
 app.get("/token", async (_req, res) => {
   const token = await aai.realtime.createTemporaryToken({ expires_in: 3600 });
   res.json({ token });
 });
+
+// Y-Sweet
+app.post('/api/auth', async (req, res) => {
+  const docId = req.body?.docId ?? null;
+  const isEditor = req.body?.isEditor ?? false;
+  const authorization = isEditor ? 'full' : 'read-only';
+  // In a production app, this is where you'd authenticate the user
+  // and check that they are authorized to access the doc.
+  const clientToken = await manager.getOrCreateDocAndToken(docId, {
+    authorization
+  })
+  res.send(clientToken)
+})
+
 
 const PORT = process.env.PORT || 8000;
 app.set("port", PORT);

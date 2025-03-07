@@ -1073,6 +1073,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.5.9":
+  version: 20.17.23
+  resolution: "@types/node@npm:20.17.23"
+  dependencies:
+    undici-types: "npm:~6.19.2"
+  checksum: 10c0/4f7da7383ee8516b2e580d772a196fd76487670bd9d32a296621c5df63b077cc7d06c2a0040885b3e4a28c1751f9ad3d5ed55cff15d50b707e3d454993bfe33a
+  languageName: node
+  linkType: hard
+
 "@types/qs@npm:*":
   version: 6.9.18
   resolution: "@types/qs@npm:6.9.18"
@@ -1389,6 +1398,15 @@ __metadata:
     loupe: "npm:^3.1.3"
     tinyrainbow: "npm:^2.0.0"
   checksum: 10c0/6b0e89e26c96fcfd825e0795f586336df6a02524a11e9ac3e576b7ed9738a9e4b69cd79d0b69b23c195cc4c6bdd907f1d8f7aa79a4ee0cb85393c94a1aa85267
+  languageName: node
+  linkType: hard
+
+"@y-sweet/sdk@npm:^0.8.2":
+  version: 0.8.2
+  resolution: "@y-sweet/sdk@npm:0.8.2"
+  dependencies:
+    "@types/node": "npm:^20.5.9"
+  checksum: 10c0/17d6015eaeb1e4599c647243ab7d56fbbbe953c70b162a83588dd765104348a4f14f2246c899bf7dec09764e951f838d8ca050c1fc696b0ee21267fac060d0b3
   languageName: node
   linkType: hard
 
@@ -2902,6 +2920,7 @@ __metadata:
     "@types/ws": "npm:^8"
     "@vitejs/plugin-react": "npm:^4.3.4"
     "@vitest/browser": "npm:^3.0.6"
+    "@y-sweet/sdk": "npm:^0.8.2"
     assemblyai: "npm:^4.9.0"
     dotenv: "npm:^16.4.7"
     eslint: "npm:^9.19.0"
@@ -4205,6 +4224,13 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/3b56d6afa03d9f6172d0b9cdb10e6b1efc9abc1608efd7a3d2f38773d5d8cfb9bbc68dfb72f0a7de5e8db04fc847f4e4baeddcd5ad9c9feda072234f0d788896
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.19.2":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
   languageName: node
   linkType: hard
 
