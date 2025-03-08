@@ -13,22 +13,10 @@ const documentManager = new DocumentManager(process.env.YSWEET_CONNECTION_STRING
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY });
 const app = express();
 app.use(express.static("public"));
-app.use(
-  "/assemblyai.js",
-  express.static(
-    join(__dirname, "node_modules/assemblyai/dist/assemblyai.umd.js"),
-  ),
-);
 app.use(json());
 
-// AAI
-app.get("/token", async (_req, res) => {
-  const token = await aai.realtime.createTemporaryToken({ expires_in: 3600 });
-  res.json({ token });
-});
 
 // Y-Sweet
 app.post('/api/auth', async (req, res) => {
@@ -42,6 +30,13 @@ app.post('/api/auth', async (req, res) => {
   })
   res.send(clientToken)
 })
+
+app.post('/api/requestTranslation', async (req, res) => {
+  const { text } = req.body;
+  // Placeholder for translation logic
+  const translatedText = `Translated: ${text}`;
+  res.json({ translatedText });
+});
 
 
 const PORT = process.env.PORT || 8000;

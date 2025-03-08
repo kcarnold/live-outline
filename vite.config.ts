@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5008,
     allowedHosts: ["localhost", "127.0.0.1", "dev8.kenarnold.org"],
     proxy: {
-      '/token': {
+      '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
