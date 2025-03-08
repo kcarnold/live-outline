@@ -1,7 +1,7 @@
 import './App.css';
 import { useState } from 'react';
 
-import { EditorProvider, FloatingMenu, BubbleMenu, Editor } from '@tiptap/react'
+import { EditorProvider, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 
 // define your extension array
@@ -15,8 +15,6 @@ const Tiptap = ({onTextChanged}: {onTextChanged: (text: string) => void}) => {
   }
   return (
     <EditorProvider extensions={extensions} content={content} onUpdate={onUpdate}>
-      <FloatingMenu editor={null}>This is the floating menu</FloatingMenu>
-      <BubbleMenu editor={null}>This is the bubble menu</BubbleMenu>
     </EditorProvider>
   )
 }
@@ -29,7 +27,7 @@ function App() {
       <div className="w-1/2 h-full p-4">
         {<Tiptap onTextChanged={setText} />}
       </div>
-      <div className="w-1/2 h-full text-center text-2xl font-bold bg-sky-500 text-white p-2 flex items-center justify-center">
+      <div className="w-1/2 h-full text-center text-2xl font-bold bg-sky-500 text-white p-2 flex items-center justify-center whitespace-pre">
         {text}
       </div>
     </div>
