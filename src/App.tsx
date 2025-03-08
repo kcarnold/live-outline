@@ -1,28 +1,35 @@
 import './App.css';
 import { useState } from 'react';
-import { useText, YDocProvider } from '@y-sweet/react';
+import { useText, useYDoc, YDocProvider } from '@y-sweet/react';
 import diff from 'fast-diff';
 
 import { EditorProvider, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-
-// define your extension array
-const extensions = [StarterKit]
+import Collaboration from '@tiptap/extension-collaboration'
 
 const content = '<p>Hello World!</p>'
 
-const Tiptap = ({onTextChanged}: {onTextChanged: (text: string) => void}) => {
+const Tiptap = ({yDoc, onTextChanged}: {yDoc: any, onTextChanged: (text: string) => void}) => {
   const onUpdate = ({ editor }: { editor: Editor }) => {
     onTextChanged(editor.getText())
   }
   return (
-    <EditorProvider extensions={extensions} content={content} onUpdate={onUpdate}>
+    <EditorProvider extensions={
+      [
+        StarterKit.configure({
+          history: false // use yjs instead of tiptap history
+        }),
+        Collaboration.configure({
+          document: yDoc
+        })
+      ]
+    } content={content} onUpdate={onUpdate}>
     </EditorProvider>
   )
 }
 
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
-const useAsPlainText= (name: string) => {
+const useAsPlainText = (name: string): [string, (newText: string) => void] => {
   const sharedText = useText(name);
   const [text, setText] = useState(sharedText.toString());
   sharedText.observe(() => {
@@ -49,8 +56,8 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
 }
 
 function AppInner() {
-  //const sharedSourceText = useText("sourceText");
-  const [text, setText] = useAsPlainText("sourceText");
+  const ydoc = useYDoc();
+  const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
 
   const doTranslation = async () => {
@@ -82,7 +89,7 @@ function AppInner() {
   return (
     <div className="flex h-screen">
       <div className="w-1/2 h-full p-4">
-        {<Tiptap onTextChanged={setText} />}
+        {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
         <div className="flex justify-end mt-2">
           <button 
             className="bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors"
