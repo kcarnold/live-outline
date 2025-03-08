@@ -32,6 +32,8 @@ function App() {
         },
         body: JSON.stringify({
           text,
+          prevTranslatedText: translatedText,
+          language: "Spanish"
         }),
       });
       
