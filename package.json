@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.12",
+    "@tiptap/pm": "^2.11.5",
+    "@tiptap/react": "^2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
     "@vitest/browser": "^3.0.6",
     "@y-sweet/sdk": "^0.8.2",
     "assemblyai": "^4.9.0",
