@@ -23,13 +23,14 @@ app.use(json());
 
 
 // Y-Sweet
-app.post('/api/auth', async (req, res) => {
+app.post('/api/ys-auth', async (req, res) => {
+  console.log('Auth request:', req.body);
   const docId = req.body?.docId ?? null;
   const isEditor = req.body?.isEditor ?? false;
   const authorization = isEditor ? 'full' : 'read-only';
   // In a production app, this is where you'd authenticate the user
   // and check that they are authorized to access the doc.
-  const clientToken = await manager.getOrCreateDocAndToken(docId, {
+  const clientToken = await documentManager.getOrCreateDocAndToken(docId, {
     authorization
   })
   res.send(clientToken)

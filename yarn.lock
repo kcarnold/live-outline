@@ -1285,7 +1285,24 @@
     loupe "^3.1.3"
     tinyrainbow "^2.0.0"
 
-"@y-sweet/sdk@^0.8.2":
+"@y-sweet/client@0.8.2":
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/@y-sweet/client/-/client-0.8.2.tgz#1c2d625a1b48feca742520b0961d92102115ddfe"
+  integrity sha512-yJ0dqC5VeyZF6KJs4aSRGUFphslSxHtNtrK1xIHAC9f4xFDUJX7pX5rY1htaraeMCELpFKnx5i0UFovqnaW6sg==
+  dependencies:
+    "@y-sweet/sdk" "0.8.2"
+    y-protocols "^1.0.5"
+
+"@y-sweet/react@^0.8.2":
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/@y-sweet/react/-/react-0.8.2.tgz#d480a8daa3a07eb5cfe625768de4a3bb3b7d156a"
+  integrity sha512-jzSrX+oTh27GSE5yP2WMV+3JSeLWpdBPg79599K1sUEPXLV5Z+2QIF1YlUAmiF3yW+BtuXhpd8G2rIT5qTAd+A==
+  dependencies:
+    "@y-sweet/client" "0.8.2"
+    "@y-sweet/sdk" "0.8.2"
+    y-protocols "^1.0.5"
+
+"@y-sweet/sdk@0.8.2", "@y-sweet/sdk@^0.8.2":
   version "0.8.2"
   resolved "https://registry.yarnpkg.com/@y-sweet/sdk/-/sdk-0.8.2.tgz#45d3e7da8b13525d5ef80629392271da67c55437"
   integrity sha512-PQdbxMNu/ZwL+Z2JKO/6lftEdSUDZuRs7Rq8H6AjYHA4rdADPBfFtzLT9fjAcSCwBuqXSVO/G15bjrfbuViHpg==
@@ -1917,6 +1934,11 @@ fast-deep-equal@^3, fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
 
+fast-diff@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/fast-diff/-/fast-diff-1.3.0.tgz#ece407fa550a64d638536cd727e129c61616e0f0"
+  integrity sha512-VxPP4NqbUjj6MaAOafWeUn2cXWLcCtljklUtZf0Ind4XQ+QPtmA0b18zZy0jIQx+ExRVCR/ZQpBmik5lXshNsw==
+
 fast-glob@^3.3.2:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.3.3.tgz#d06d585ce8dba90a16b0505c543c3ccfb3aeb818"
@@ -2233,6 +2255,11 @@ isexe@^2.0.0:
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
 
+isomorphic.js@^0.2.4:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/isomorphic.js/-/isomorphic.js-0.2.5.tgz#13eecf36f2dba53e85d355e11bf9d4208c6f7f88"
+  integrity sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==
+
 jiti@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/jiti/-/jiti-2.4.2.tgz#d19b7732ebb6116b06e2038da74a55366faef560"
@@ -2289,6 +2316,13 @@ levn@^0.4.1:
   dependencies:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
+
+lib0@^0.2.85, lib0@^0.2.99:
+  version "0.2.99"
+  resolved "https://registry.yarnpkg.com/lib0/-/lib0-0.2.99.tgz#80d715dbd75496dabe0a1f5061fbb4ea162d2532"
+  integrity sha512-vwztYuUf1uf/1zQxfzRfO5yzfNKhTtgOByCruuiQQxWQXnPb8Itaube5ylofcV0oM0aKal9Mv+S1s1Ky0UYP1w==
+  dependencies:
+    isomorphic.js "^0.2.4"
 
 lightningcss-darwin-arm64@1.29.2:
   version "1.29.2"
@@ -3448,6 +3482,13 @@ ws@^8.18.1:
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.1.tgz#ea131d3784e1dfdff91adb0a4a116b127515e3cb"
   integrity sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w==
 
+y-protocols@^1.0.5:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/y-protocols/-/y-protocols-1.0.6.tgz#66dad8a95752623443e8e28c0e923682d2c0d495"
+  integrity sha512-vHRF2L6iT3rwj1jub/K5tYcTT/mEYDUppgNPXwp8fmLpui9f7Yeq3OEtTLVF012j39QnV+KEQpNqoN7CWU7Y9Q==
+  dependencies:
+    lib0 "^0.2.85"
+
 y18n@^5.0.5:
   version "5.0.8"
   resolved "https://registry.yarnpkg.com/y18n/-/y18n-5.0.8.tgz#7f4934d0f7ca8c56f95314939ddcd2dd91ce1d55"
@@ -3475,6 +3516,13 @@ yargs@^17.7.2:
     string-width "^4.2.3"
     y18n "^5.0.5"
     yargs-parser "^21.1.1"
+
+yjs@^13.6.24:
+  version "13.6.24"
+  resolved "https://registry.yarnpkg.com/yjs/-/yjs-13.6.24.tgz#056f40c7ccfd16a6487f507bb21e12ede994b2b3"
+  integrity sha512-xn/pYLTZa3uD1uDG8lpxfLRo5SR/rp0frdASOl2a71aYNvUXdWcLtVL91s2y7j+Q8ppmjZ9H3jsGVgoFMbT2VA==
+  dependencies:
+    lib0 "^0.2.99"
 
 yocto-queue@^0.1.0:
   version "0.1.0"

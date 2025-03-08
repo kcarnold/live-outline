@@ -1,5 +1,7 @@
 import './App.css';
 import { useState } from 'react';
+import { useText, YDocProvider } from '@y-sweet/react';
+import diff from 'fast-diff';
 
 import { EditorProvider, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -19,9 +21,37 @@ const Tiptap = ({onTextChanged}: {onTextChanged: (text: string) => void}) => {
   )
 }
 
-function App() {
-  const [text, setText] = useState("Hello world!");
-  const [translatedText, setTranslatedText] = useState("");
+// Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
+const useAsPlainText= (name: string) => {
+  const sharedText = useText(name);
+  const [text, setText] = useState(sharedText.toString());
+  sharedText.observe(() => {
+    setText(sharedText.toString());
+  });
+  const setPlainText = (newText: string) => {
+    const delta = diffToDelta(diff(text, newText));
+    sharedText.applyDelta(delta);
+  };
+  return [text, setPlainText];
+}
+
+function diffToDelta(diffResult: diff.Diff[]): any[] {
+  return diffResult.map(([op, value]) => {
+    if (op === diff.INSERT) 
+      return { insert: value };
+    if (op === diff.DELETE)
+      return { delete: value.length };
+    if (op === diff.EQUAL)
+      return { retain: value.length };
+    console.error('Unknown diff operation:', op);
+    return null;
+  });
+}
+
+function AppInner() {
+  //const sharedSourceText = useText("sourceText");
+  const [text, setText] = useAsPlainText("sourceText");
+  const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
 
   const doTranslation = async () => {
     try {
@@ -31,7 +61,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text,
+          text: text,
           prevTranslatedText: translatedText,
           language: "Spanish"
         }),
@@ -43,6 +73,7 @@ function App() {
       
       const result = await response.json();
       setTranslatedText(result.translatedText);
+
     } catch (error) {
       console.error('Error during translation:', error);
     }
@@ -67,5 +98,24 @@ function App() {
     </div>
   );
 }
+
+const App = () => {
+  const docId = "example-doc";
+  const authEndpoint = async () => {
+    const response = await fetch('/api/ys-auth', {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ docId, isEditor: true }),
+    });
+    return await response.json();
+  }
+  return (
+    <YDocProvider docId={docId} authEndpoint={authEndpoint}>
+      <AppInner />
+    </YDocProvider>
+  );
+};
 
 export default App;
