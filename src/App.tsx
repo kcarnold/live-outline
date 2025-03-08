@@ -26,6 +26,16 @@ function App() {
     <div className="flex h-screen">
       <div className="w-1/2 h-full p-4">
         {<Tiptap onTextChanged={setText} />}
+        <div className="flex justify-end mt-2">
+          <button 
+            className="bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+            onClick={() => {
+              console.log('Translate button clicked');
+            }}
+          >
+            Translate
+          </button>
+        </div>
       </div>
       <div className="w-1/2 h-full text-center text-2xl font-bold bg-sky-500 text-white p-2 flex items-center justify-center whitespace-pre">
         {text}
