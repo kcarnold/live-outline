@@ -3,8 +3,6 @@ import express, { static as serveStatic, json } from "express";
 import { join, dirname } from "path";
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { WebSocketServer } from 'ws';
-import { handleMessage, broadcastState } from './state.js';
 import { DocumentManager } from '@y-sweet/sdk'
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -93,34 +91,4 @@ const server = app.listen(app.get("port"), () => {
   console.log(`HTTP/WS Server running on http://localhost:${PORT}`);
 }).on('error', (error) => {
   console.error('Server error:', error);
-});
-
-const wss = new WebSocketServer({ server });
-
-wss.on('error', (error) => {
-  console.error('WebSocket Server error:', error);
-});
-
-wss.on('connection', (ws) => {
-  ws.isAlive = true;
-  console.log('Client connected');
-  ws.on('pong', () => ws.isAlive = true);
-
-  ws.on('message', async (data) => {
-    try {
-      const message = JSON.parse(data);
-      await handleMessage(message, ws);
-    } catch (error) {
-      console.error('Message handling error:', error);
-      ws.send(JSON.stringify({ 
-        type: 'error', 
-        error: error.message
-      }));
-    }
-  });
-
-  ws.on('close', () => {
-    // Handle disconnection in state management
-    handleMessage({ type: 'disconnect' }, ws);
-  });
 });
