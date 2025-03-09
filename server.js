@@ -40,7 +40,7 @@ app.post('/api/requestTranslation', async (req, res) => {
   const language = req.body?.language ?? "";
 
   const message = await anthropicClient.messages.create({
-    max_tokens: 1024,
+    max_tokens: 4096,
     messages: [{ role: 'user', content: `We are translating text into ${language} as it comes in.
 
 So we need to update the translation we have so far to account for the new text.
