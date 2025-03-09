@@ -97,6 +97,14 @@ function AppInner() {
         {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
         <div className="flex justify-end mt-2">
           <button 
+            className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
+            onClick={() => {
+              setTranslatedText("");
+            }}
+          >
+            Reset
+          </button>
+          <button 
             className="bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors"
             onClick={doTranslation}
           >
