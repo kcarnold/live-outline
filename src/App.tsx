@@ -71,8 +71,12 @@ function AppInner() {
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
   const [language, setLanguage] = useState("Spanish");
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const doTranslation = async () => {
+    if (isTranslating) return;
+    
+    setIsTranslating(true);
     try {
       const response = await fetch('/api/requestTranslation', {
         method: 'POST',
@@ -95,6 +99,8 @@ function AppInner() {
 
     } catch (error) {
       console.error('Error during translation:', error);
+    } finally {
+      setIsTranslating(false);
     }
   }
 
@@ -124,10 +130,11 @@ function AppInner() {
             Reset
           </button>
           <button 
-            className="bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+            className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             onClick={doTranslation}
+            disabled={isTranslating}
           >
-            Translate
+            {isTranslating ? 'Translating...' : 'Translate'}
           </button>
         </div>
         {/*<Remark>
