@@ -105,7 +105,7 @@ function AppInner() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh">
       <div className="w-1/2 h-full p-4 overflow-auto">
         {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
         <div className="flex justify-end mt-2">
@@ -155,7 +155,7 @@ const ViewOnly = () => {
   const translatedText = useText("translatedText");
   const text = useText("textAsMarkdown");
   return (
-    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row h-dvh overflow-hidden">
       <div className="w-full md:w-1/2 h-1/2 md:h-full p-4 overflow-auto">
         <div className="p-4">
           <Remark>
