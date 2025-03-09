@@ -6,13 +6,16 @@ import diff from 'fast-diff';
 import { EditorProvider, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
+import { Markdown } from 'tiptap-markdown';
+
 import { Remark } from 'react-remark';
 
 const content = '<p>Hello World!</p>'
 
 const Tiptap = ({yDoc, onTextChanged}: {yDoc: any, onTextChanged: (text: string) => void}) => {
   const onUpdate = ({ editor }: { editor: Editor }) => {
-    onTextChanged(editor.getText())
+    //    onTextChanged(editor.getText())
+    onTextChanged(editor.storage.markdown.getMarkdown());
   }
   return (
     <EditorProvider extensions={
@@ -20,6 +23,7 @@ const Tiptap = ({yDoc, onTextChanged}: {yDoc: any, onTextChanged: (text: string)
         StarterKit.configure({
           history: false // use yjs instead of tiptap history
         }),
+        Markdown,
         Collaboration.configure({
           document: yDoc
         })
@@ -99,8 +103,11 @@ function AppInner() {
             Translate
           </button>
         </div>
+        {/*<Remark>
+          {text}
+        </Remark>*/}
       </div>
-      <div className="w-1/2 h-full text-center text-2xl font-bold bg-sky-500 text-white p-2">
+      <div className="w-1/2 h-full text-2xl font-bold bg-sky-500 text-white p-2">
         <Remark>
           {translatedText}
         </Remark>

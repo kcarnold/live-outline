@@ -3,3 +3,14 @@
 #root {
   width: 100%;
 }
+
+@layer base {
+  ul {
+    list-style: initial;
+    margin: initial;
+    padding: 0 1em;
+  }
+  ul li, ol li {
+    margin: initial;
+  }
+}
