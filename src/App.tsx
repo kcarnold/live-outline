@@ -106,7 +106,7 @@ function AppInner() {
 
   return (
     <div className="flex h-screen">
-      <div className="w-1/2 h-full p-4">
+      <div className="w-1/2 h-full p-4 overflow-auto">
         {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
         <div className="flex justify-end mt-2">
           {/* Language selector */ }
@@ -141,7 +141,7 @@ function AppInner() {
           {text}
         </Remark>*/}
       </div>
-      <div className="w-1/2 h-full text-2xl font-bold bg-sky-500 text-white p-2">
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto">
         <Remark>
           {translatedText}
         </Remark>
