@@ -163,7 +163,7 @@ const ViewOnly = () => {
           </Remark>
         </div>
       </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto">
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16">
         <Remark>
           {translatedText.toString()}
         </Remark>
