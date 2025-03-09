@@ -143,19 +143,20 @@ function AppInner() {
   );
 }
 
+
 const ViewOnly = () => {
   const translatedText = useText("translatedText");
   const text = useText("textAsMarkdown");
   return (
-    <div className="flex h-screen">
-      <div className="w-1/2 h-full p-4">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+      <div className="w-full md:w-1/2 h-1/2 md:h-full p-4 overflow-auto">
         <div className="p-4">
           <Remark>
             {text.toString()}
           </Remark>
         </div>
       </div>
-      <div className="w-1/2 h-full text-2xl font-bold bg-sky-500 text-white p-2">
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto">
         <Remark>
           {translatedText.toString()}
         </Remark>
@@ -163,7 +164,6 @@ const ViewOnly = () => {
     </div>
   );
 }
-
 
 const App = () => {
   const docId = "example-doc";
