@@ -7,15 +7,21 @@ import { EditorProvider, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
 import { Markdown } from 'tiptap-markdown';
+import * as Y from 'yjs';
 
 import { Remark } from 'react-remark';
 
 const content = '<p>Hello World!</p>'
 
-const Tiptap = ({yDoc, onTextChanged}: {yDoc: any, onTextChanged: (text: string) => void}) => {
+const Tiptap = ({yDoc, onTextChanged}: {yDoc: Y.Doc, onTextChanged: (text: string) => void}) => {
   const onUpdate = ({ editor }: { editor: Editor }) => {
     //    onTextChanged(editor.getText())
-    onTextChanged(editor.storage.markdown.getMarkdown());
+    const markdown = editor.storage.markdown.getMarkdown()
+    onTextChanged(markdown);
+    // store the markdown in yjs also
+    const sharedMarkdown = yDoc.getText("textAsMarkdown");
+    const delta = diffToDelta(diff(sharedMarkdown.toString(), markdown));
+    sharedMarkdown.applyDelta(delta);
   }
   return (
     <EditorProvider extensions={
@@ -64,6 +70,7 @@ function AppInner() {
   const ydoc = useYDoc();
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
+  const [language, setLanguage] = useState("Spanish");
 
   const doTranslation = async () => {
     try {
@@ -75,7 +82,7 @@ function AppInner() {
         body: JSON.stringify({
           text: text,
           prevTranslatedText: translatedText,
-          language: "Spanish"
+          language
         }),
       });
       
@@ -96,6 +103,18 @@ function AppInner() {
       <div className="w-1/2 h-full p-4">
         {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
         <div className="flex justify-end mt-2">
+          {/* Language selector */ }
+          <select 
+            className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
+            value={language}
+            onChange={(e) => {
+              setLanguage(e.target.value);
+            }}
+          >
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="Haitian Creole">Haitian Creole</option>
+          </select>
           <button 
             className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
             onClick={() => {
@@ -124,21 +143,45 @@ function AppInner() {
   );
 }
 
+const ViewOnly = () => {
+  const translatedText = useText("translatedText");
+  const text = useText("textAsMarkdown");
+  return (
+    <div className="flex h-screen">
+      <div className="w-1/2 h-full p-4">
+        <div className="p-4">
+          <Remark>
+            {text.toString()}
+          </Remark>
+        </div>
+      </div>
+      <div className="w-1/2 h-full text-2xl font-bold bg-sky-500 text-white p-2">
+        <Remark>
+          {translatedText.toString()}
+        </Remark>
+      </div>
+    </div>
+  );
+}
+
+
 const App = () => {
   const docId = "example-doc";
+  // We're an editor only if location hash includes #editor
+  const isEditor = window.location.hash.includes("editor");
   const authEndpoint = async () => {
     const response = await fetch('/api/ys-auth', {
       method: 'POST',
       headers: {
       'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ docId, isEditor: true }),
+      body: JSON.stringify({ docId, isEditor }),
     });
     return await response.json();
   }
   return (
     <YDocProvider docId={docId} authEndpoint={authEndpoint}>
-      <AppInner />
+      {isEditor ? <AppInner /> : <ViewOnly />}
     </YDocProvider>
   );
 };
