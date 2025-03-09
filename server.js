@@ -62,10 +62,6 @@ Your interpretation of what we're doing, any needed thinking, and any clarificat
 <translation>
 The completed updated translation
 </translation>
-
-<commentary>
-Any additional comments or thoughts you have on the translation process or the translation itself.
-</commentary>
 ` }],
 
     model: 'claude-3-7-sonnet-latest',
