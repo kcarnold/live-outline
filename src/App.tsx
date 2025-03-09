@@ -6,6 +6,7 @@ import diff from 'fast-diff';
 import { EditorProvider, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
+import { Remark } from 'react-remark';
 
 const content = '<p>Hello World!</p>'
 
@@ -99,8 +100,10 @@ function AppInner() {
           </button>
         </div>
       </div>
-      <div className="w-1/2 h-full text-center text-2xl font-bold bg-sky-500 text-white p-2 flex items-center justify-center whitespace-pre">
-        {translatedText}
+      <div className="w-1/2 h-full text-center text-2xl font-bold bg-sky-500 text-white p-2">
+        <Remark>
+          {translatedText}
+        </Remark>
       </div>
     </div>
   );
