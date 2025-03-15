@@ -103,7 +103,7 @@ function AppInner() {
     <div className="flex h-dvh">
       <div className="flex flex-col w-1/2 h-full">
         <div className="flex-grow overflow-auto p-4">
-          {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
+          {<Tiptap yDoc={ydoc} onTextChanged={setText} editable={true} />}
         </div>
         <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
           {/* Language selector */ }
