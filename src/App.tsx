@@ -1,6 +1,6 @@
 import './App.css';
 import { useState, useEffect } from 'react';
-import { useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
+import { useConnectionStatus, useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
 import diff from 'fast-diff';
 import * as Y from 'yjs';
 
@@ -27,6 +27,8 @@ import { Awareness } from 'y-protocols/awareness.js';
 
 const ProseMirrorEditor = ({ yDoc, onTextChanged, editable }: {yDoc: Y.Doc, onTextChanged: (text: string) => void, editable: boolean}) => {
   const yXmlFragment = yDoc.getXmlFragment('prosemirror');
+  // @ts-ignore
+  window.yXmlFragment = yXmlFragment; // For debugging
   const [editorState, setEditorState] = useState(
     EditorState.create({ schema, plugins: [
       reactKeys(),
@@ -68,8 +70,6 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable }: {yDoc: Y.Doc, onTe
   );
 
 };
-
-// Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 const useAsPlainText = (name: string): [string, (newText: string) => void] => {
@@ -196,9 +196,25 @@ function AppInner() {
 const ViewOnly = () => {
   const ydoc = useYDoc();
   const translatedText = useText("translatedText");
+  const connectionStatus = useConnectionStatus();
   
   return (
-    <div className="flex flex-col md:flex-row h-dvh overflow-hidden">
+    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
+      <div className="absolute top-2 right-2 z-10">
+        <div className={`px-1 py-1 rounded-full text-xs font-medium ${
+          connectionStatus === 'connected' 
+            ? 'bg-green-500 text-white' 
+            : connectionStatus === 'connecting' 
+            ? 'bg-yellow-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          {connectionStatus === 'connected' 
+            ? 'Connected' 
+            : connectionStatus === 'connecting' 
+            ? 'Connecting...' 
+            : 'Disconnected'}
+        </div>
+      </div>
       <div className="w-full md:w-1/2 h-1/2 md:h-full p-4 overflow-auto">
         <div className="p-4">
           <ProseMirrorEditor yDoc={ydoc} editable={false} onTextChanged={() => null} />
