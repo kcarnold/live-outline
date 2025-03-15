@@ -5,7 +5,7 @@ import diff from 'fast-diff';
 import * as Y from 'yjs';
 
 // ProseMirror imports
-import { EditorState } from 'prosemirror-state';
+import { EditorState, Transaction } from 'prosemirror-state';
 import { baseKeymap } from 'prosemirror-commands';
 import {
   ProseMirror,
@@ -14,9 +14,10 @@ import {
 } from "@handlewithcare/react-prosemirror";
 
 
-import { buildInputRules, exampleSetup } from 'prosemirror-example-setup';
+import { buildInputRules, buildKeymap } from 'prosemirror-example-setup';
 import { ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
 import { keymap } from 'prosemirror-keymap';
+import { liftListItem, sinkListItem, wrapInList } from 'prosemirror-schema-list';
 
 // For markdown conversion
 import { Remark } from 'react-remark';
@@ -33,12 +34,15 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable }: {yDoc: Y.Doc, onTe
         //yCursorPlugin(yDoc.getMap('cursors')),
         yUndoPlugin(),
         buildInputRules(schema),
+        keymap(buildKeymap(schema)),
         keymap({
           'Mod-z': undo,
           'Mod-y': redo,
-          'Mod-Shift-z': redo
+          'Mod-Shift-z': redo,
+          'Tab': sinkListItem(schema.nodes.list_item),
+          'Shift-Tab': liftListItem(schema.nodes.list_item),
         }),
-        keymap(baseKeymap),
+        keymap(baseKeymap)
     ] })
   );
 
