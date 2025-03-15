@@ -106,9 +106,11 @@ function AppInner() {
 
   return (
     <div className="flex h-dvh">
-      <div className="w-1/2 h-full p-4 overflow-auto">
-        {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
-        <div className="flex justify-end mt-2">
+      <div className="flex flex-col w-1/2 h-full">
+        <div className="flex-grow overflow-auto p-4">
+          {<Tiptap yDoc={ydoc} onTextChanged={setText} />}
+        </div>
+        <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
           {/* Language selector */ }
           <select 
             className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
@@ -137,9 +139,6 @@ function AppInner() {
             {isTranslating ? 'Translating...' : 'Translate'}
           </button>
         </div>
-        {/*<Remark>
-          {text}
-        </Remark>*/}
       </div>
       <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto">
         <Remark>
