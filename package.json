@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@handlewithcare/react-prosemirror": "^2.3.3",
     "@tailwindcss/vite": "^4.0.12",
     "@vitest/browser": "^3.0.6",
     "@y-sweet/react": "^0.8.2",
@@ -24,7 +25,7 @@
     "prosemirror-markdown": "^1.13.1",
     "prosemirror-model": "^1.24.1",
     "prosemirror-state": "^1.4.3",
-    "prosemirror-view": "^1.38.1",
+    "prosemirror-view": "1.37.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-remark": "^2.1.0",

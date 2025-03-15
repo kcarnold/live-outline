@@ -1,13 +1,20 @@
 import './App.css';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
 import diff from 'fast-diff';
 import * as Y from 'yjs';
 
 // ProseMirror imports
 import { EditorState } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
-import { exampleSetup } from 'prosemirror-example-setup';
+import { baseKeymap } from 'prosemirror-commands';
+import {
+  ProseMirror,
+  ProseMirrorDoc,
+  reactKeys,
+} from "@handlewithcare/react-prosemirror";
+
+
+import { buildInputRules, exampleSetup } from 'prosemirror-example-setup';
 import { ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
 import { keymap } from 'prosemirror-keymap';
 
@@ -16,62 +23,46 @@ import { Remark } from 'react-remark';
 import { schema, defaultMarkdownSerializer } from 'prosemirror-markdown';
 import { Awareness } from 'y-protocols/awareness.js';
 
-// ProseMirror component to replace Tiptap
+
 const ProseMirrorEditor = ({ yDoc, onTextChanged, editable }: {yDoc: Y.Doc, onTextChanged: (text: string) => void, editable: boolean}) => {
-  const editorRef = useRef<null>(null);
-  const viewRef = useRef<EditorView | null>(null);
-
-  useEffect(() => {
-    if (!editorRef.current) return;
-
-    // Get the shared type from the Yjs document
-    const yXmlFragment = yDoc.getXmlFragment('prosemirror');
-
-    // Create ProseMirror state with Yjs sync plugin
-    const state = EditorState.create({
-      schema,
-      plugins: [
-        ySyncPlugin(yXmlFragment),
+  const yXmlFragment = yDoc.getXmlFragment('prosemirror');
+  const [editorState, setEditorState] = useState(
+    EditorState.create({ schema, plugins: [
+      reactKeys(),
+      ySyncPlugin(yXmlFragment),
         //yCursorPlugin(yDoc.getMap('cursors')),
         yUndoPlugin(),
+        buildInputRules(schema),
         keymap({
           'Mod-z': undo,
           'Mod-y': redo,
           'Mod-Shift-z': redo
         }),
-        ...exampleSetup({ schema })
-      ]
-    });
+        keymap(baseKeymap),
+    ] })
+  );
 
-    // Create ProseMirror view
-    console.log('Creating ProseMirror view');
-    let view = new EditorView(editorRef.current, {
-      state,
-      dispatchTransaction(transaction) {
-        const newState = view.state.apply(transaction);
-        view.updateState(newState);
-        
+  return (
+    <div className="h-full">
+    <ProseMirror
+      state={editorState}
+      editable={() => editable}
+      dispatchTransaction={(transaction) => {
+        const newState = editorState.apply(transaction);
+        setEditorState((s) => s.apply(transaction));
+
         // Convert content to markdown when it changes
         if (transaction.docChanged && onTextChanged) {
           const serializedContent = defaultMarkdownSerializer.serialize(newState.doc);
           onTextChanged(serializedContent);
         }
-      },
-      editable: () => editable
-    });
+      }}
+    >
+      <ProseMirrorDoc />
+    </ProseMirror>
+    </div>
+  );
 
-    // Store the view in a ref
-    viewRef.current = view;
-
-    // Cleanup
-    return () => {
-      if (viewRef.current) {
-        viewRef.current.destroy();
-      }
-    };
-  }, [yDoc, onTextChanged, editable]);
-
-  return <div ref={editorRef} className="prose max-w-none" />;
 };
 
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
