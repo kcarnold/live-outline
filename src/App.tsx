@@ -13,7 +13,7 @@ import { Remark } from 'react-remark';
 
 const content = '<p>Hello World!</p>'
 
-const Tiptap = ({yDoc, onTextChanged}: {yDoc: Y.Doc, onTextChanged: (text: string) => void}) => {
+const Tiptap = ({yDoc, onTextChanged, editable}: {yDoc: Y.Doc, onTextChanged: (text: string) => void, editable: boolean}) => {
   const onUpdate = ({ editor }: { editor: Editor }) => {
     //    onTextChanged(editor.getText())
     const markdown = editor.storage.markdown.getMarkdown()
@@ -34,7 +34,7 @@ const Tiptap = ({yDoc, onTextChanged}: {yDoc: Y.Doc, onTextChanged: (text: strin
           document: yDoc
         })
       ]
-    } content={content} onUpdate={onUpdate}>
+    } content={content} onUpdate={onUpdate} editable={editable}>
     </EditorProvider>
   )
 }
@@ -151,15 +151,13 @@ function AppInner() {
 
 
 const ViewOnly = () => {
+  const ydoc = useYDoc();
   const translatedText = useText("translatedText");
-  const text = useText("textAsMarkdown");
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden">
       <div className="w-full md:w-1/2 h-1/2 md:h-full p-4 overflow-auto">
         <div className="p-4">
-          <Remark>
-            {text.toString()}
-          </Remark>
+          <Tiptap yDoc={ydoc} editable={false} onTextChanged={() => null} />
         </div>
       </div>
       <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16">
