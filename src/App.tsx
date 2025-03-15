@@ -1,6 +1,6 @@
 import './App.css';
 import { useState } from 'react';
-import { useText, useYDoc, YDocProvider } from '@y-sweet/react';
+import { useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
 import diff from 'fast-diff';
 
 import { EditorProvider, Editor } from '@tiptap/react'
@@ -65,7 +65,11 @@ function AppInner() {
   const ydoc = useYDoc();
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
-  const [language, setLanguage] = useState("Spanish");
+  const sharedMeta = useMap("meta");
+  const language = sharedMeta.get("language") || "Spanish";
+  const setLanguage = (newLanguage: string) => {
+    sharedMeta.set("language", newLanguage);
+  }
   const [isTranslating, setIsTranslating] = useState(false);
 
   const doTranslation = async () => {
