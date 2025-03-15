@@ -1,5 +1,5 @@
 import './App.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createRef } from 'react';
 import { useConnectionStatus, useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
 import diff from 'fast-diff';
 import * as Y from 'yjs';
@@ -197,6 +197,13 @@ const ViewOnly = () => {
   const ydoc = useYDoc();
   const translatedText = useText("translatedText");
   const connectionStatus = useConnectionStatus();
+  const translatedTextContainerRef = createRef<HTMLDivElement>();
+
+  useEffect(() => {
+    if (translatedTextContainerRef.current) {
+      translatedTextContainerRef.current.scrollTop = translatedTextContainerRef.current.scrollHeight;
+    }
+  }, [translatedText.toString()]);
   
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
@@ -220,7 +227,7 @@ const ViewOnly = () => {
           <ProseMirrorEditor yDoc={ydoc} editable={false} onTextChanged={() => null} />
         </div>
       </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16">
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
         <Remark>
           {translatedText.toString()}
         </Remark>
