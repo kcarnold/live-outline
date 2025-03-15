@@ -66,7 +66,7 @@ function AppInner() {
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
   const sharedMeta = useMap("meta");
-  const language = sharedMeta.get("language") || "Spanish";
+  const language = (sharedMeta.get("language") || "Spanish") as string;
   const setLanguage = (newLanguage: string) => {
     sharedMeta.set("language", newLanguage);
   }
