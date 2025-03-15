@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
 @layer base {
-  ul {
-    list-style: initial;
+  ul, ol {
     margin: initial;
-    padding: 0 1em;
+    list-style-type: initial;
+    padding-left: 1em;
   }
+  ul { list-style-type: disc; }
+  ol { list-style-type: decimal;  }
+  ul ul { list-style-type: circle; }
+  ol ol { list-style-type: lower-alpha; }
+  ul ul ul { list-style-type: square; }
+  ol ol ol { list-style-type: lower-roman; }
   ul li, ol li {
     margin: initial;
   }
