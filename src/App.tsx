@@ -15,13 +15,8 @@ const content = '<p>Hello World!</p>'
 
 const Tiptap = ({yDoc, onTextChanged, editable}: {yDoc: Y.Doc, onTextChanged: (text: string) => void, editable: boolean}) => {
   const onUpdate = ({ editor }: { editor: Editor }) => {
-    //    onTextChanged(editor.getText())
     const markdown = editor.storage.markdown.getMarkdown()
     onTextChanged(markdown);
-    // store the markdown in yjs also
-    const sharedMarkdown = yDoc.getText("textAsMarkdown");
-    const delta = diffToDelta(diff(sharedMarkdown.toString(), markdown));
-    sharedMarkdown.applyDelta(delta);
   }
   return (
     <EditorProvider extensions={
