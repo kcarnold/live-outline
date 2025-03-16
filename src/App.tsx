@@ -1,11 +1,11 @@
 import './App.css';
-import { useState, useEffect, createRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useConnectionStatus, useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
 import diff from 'fast-diff';
 import * as Y from 'yjs';
 
 // ProseMirror imports
-import { EditorState, Transaction } from 'prosemirror-state';
+import { EditorState } from 'prosemirror-state';
 import { baseKeymap } from 'prosemirror-commands';
 import {
   ProseMirror,
@@ -17,7 +17,7 @@ import {
 import { buildInputRules, buildKeymap } from 'prosemirror-example-setup';
 import { ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
 import { keymap } from 'prosemirror-keymap';
-import { liftListItem, sinkListItem, wrapInList } from 'prosemirror-schema-list';
+import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 
 // For markdown conversion
 import { Remark } from 'react-remark';
@@ -25,10 +25,23 @@ import { schema, defaultMarkdownSerializer } from 'prosemirror-markdown';
 import { Awareness } from 'y-protocols/awareness.js';
 
 
-const ProseMirrorEditor = ({ yDoc, onTextChanged, editable }: {yDoc: Y.Doc, onTextChanged: (text: string) => void, editable: boolean}) => {
+const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger }: {
+  yDoc: Y.Doc,
+  onTextChanged: (text: string) => void,
+  editable: boolean,
+  onTranslationTrigger?: () => void
+}) => {
   const yXmlFragment = yDoc.getXmlFragment('prosemirror');
   // @ts-ignore
   window.yXmlFragment = yXmlFragment; // For debugging
+
+  // Hack: The keymap in the editor state would otherwise close over a stale value of onTranslationTrigger.
+  const onTranslationTriggerRef = useRef<(() => void) | undefined>(onTranslationTrigger);
+  useEffect(() => {
+    onTranslationTriggerRef.current = onTranslationTrigger;
+  }
+  , [onTranslationTrigger]);
+
   const [editorState, setEditorState] = useState(
     EditorState.create({ schema, plugins: [
       reactKeys(),
@@ -36,14 +49,21 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable }: {yDoc: Y.Doc, onTe
         //yCursorPlugin(yDoc.getMap('cursors')),
         yUndoPlugin(),
         buildInputRules(schema),
-        keymap(buildKeymap(schema)),
         keymap({
           'Mod-z': undo,
           'Mod-y': redo,
           'Mod-Shift-z': redo,
           'Tab': sinkListItem(schema.nodes.list_item),
           'Shift-Tab': liftListItem(schema.nodes.list_item),
+          'Mod-Enter': (_state, _dispatch) => {
+            if (onTranslationTriggerRef.current) {
+              onTranslationTriggerRef.current();
+              return true;
+            }
+            return false;
+          }
         }),
+        keymap(buildKeymap(schema)),
         keymap(baseKeymap)
     ] })
   );
@@ -145,6 +165,10 @@ function AppInner() {
   const [isTranslating, setIsTranslating] = useState(false);
 
   const doTranslation = async () => {
+    if (!text || !language) {
+      console.warn('Text or language not set, skipping translation');
+      return;
+    }
     if (isTranslating) return;
     
     setIsTranslating(true);
@@ -165,7 +189,7 @@ function AppInner() {
     <div className="flex h-dvh">
       <div className="flex flex-col w-1/2 h-full">
         <div className="flex-grow overflow-auto p-4">
-          <ProseMirrorEditor yDoc={ydoc} onTextChanged={setText} editable={true} />
+          <ProseMirrorEditor yDoc={ydoc} onTextChanged={setText} editable={true} onTranslationTrigger={() => doTranslation()}/>
         </div>
         <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
           {/* Language selector */}
@@ -210,7 +234,7 @@ const ViewOnly = () => {
   const ydoc = useYDoc();
   const translatedText = useText("translatedText");
   const connectionStatus = useConnectionStatus();
-  const translatedTextContainerRef = createRef<HTMLDivElement>();
+  const translatedTextContainerRef = useRef<HTMLDivElement>();
 
   useEffect(() => {
     if (translatedTextContainerRef.current) {
