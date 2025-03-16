@@ -75,13 +75,11 @@ ${text}
 
 Please respond in this format:
 
-<thoughts>
-Your interpretation of what we're doing, any needed thinking, and any clarifications you need.
-</thoughts>
-
 <translation>
 The completed updated translation
 </translation>
+
+Always give the complete translation, even if it's just a small change or there is some uncertainty.
 ` }],
 
     model: claudeModel,
