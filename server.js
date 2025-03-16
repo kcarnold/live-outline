@@ -11,6 +11,7 @@ const anthropicClient = new Anthropic({
 });
 
 const claudeModel = "claude-3-5-haiku-20241022";
+const MAX_TOKENS = 8192;
 
 const documentManager = new DocumentManager(process.env.YSWEET_CONNECTION_STRING);
 
@@ -61,7 +62,7 @@ app.post('/api/requestTranslation', async (req, res) => {
 
 const getTranslation = async (text, prevTranslatedText, language) => {
   const message = await anthropicClient.messages.create({
-    max_tokens: 4096,
+    max_tokens: MAX_TOKENS,
     messages: [{ role: 'user', content: `We are translating text into ${language} as it comes in.
 
 So we need to update the translation we have so far to account for the new text.
@@ -106,7 +107,7 @@ The completed updated translation
 const getTranslationEfficient = async (text, prevTranslatedText, language) => {
   const msg = await anthropicClient.messages.create({
     model: claudeModel,
-    max_tokens: 8192,
+    max_tokens: MAX_TOKENS,
     temperature: 0.1,
     messages: [
       {
@@ -114,25 +115,39 @@ const getTranslationEfficient = async (text, prevTranslatedText, language) => {
         "content": [
           {
             "type": "text",
-            "text": `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. Call the \"insert\" or \"update\" tools to update the translation.
+            "text": `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. Call the \"insert\", \"update\", or \"replaceEntireText\" tools to update the translation.
+
+Note: Long tool calls cost us more money. So:
+- If the change is only adding a line, use the \"insert\" tool.
+- When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.
+- Only call \"replaceEntireText\" as a last resort, if the amount of incorrect text is large.
+- If no edits are needed, simply respond with inserting an empty string.
+- Think about the cost of your edits, and try to be efficient.
 
 Existing translation (to update):\n\`\`\`\n${prevTranslatedText}\n\`\`\`
 
 New source text; update the translation to correspond to this:\n\`\`\`\n${text}\n\`\`\`\n`
           }
         ]
-      },
-      {
-        "role": "assistant",
-        "content": [
-          {
-            "type": "text",
-            "text": `I'll help you update the ${language} translation to incorporate the new source text.`
-          }
-        ]
       }
     ],
     tools: [
+      {
+        "name": "replaceEntireText",
+        "description": "Replace the entire text with a new translation",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "new_str": {
+              "type": "string",
+              "description": "The new translation"
+            }
+          },
+          "required": [
+            "new_str"
+          ]
+        }
+      },
       {
         "name": "insert",
         "description": "Insert text at a given line number",
@@ -156,13 +171,12 @@ New source text; update the translation to correspond to this:\n\`\`\`\n${text}\
       },
       {
         "name": "update",
-        "description": "Apply one or more edits to the output text",
+        "description": "Substitute one string for another",
         "input_schema": {
           "type": "object",
           "properties": {
             "old_str": {
               "type": "string",
-              "description": "A verbatim quote from the existing text."
             },
             "new_str": {
               "type": "string",
@@ -182,17 +196,21 @@ New source text; update the translation to correspond to this:\n\`\`\`\n${text}\
   if (msg.stop_reason !== 'tool_use') {
     throw new Error('Expected tool_use stop reason');
   }
+  console.dir(msg, { depth: null });
   const tool = msg.content.find(
     (content) => content.type === 'tool_use',
   );
-  console.dir(tool);
 
   // The tools assumed that prevTranslatedText ended with a newline, so we add one here if it doesn't
   if (prevTranslatedText.length > 0 && prevTranslatedText[prevTranslatedText.length - 1] !== '\n') {
     prevTranslatedText += '\n';
   }
 
-  if (tool.name === 'insert') {
+  if (tool.name === 'replaceEntireText') {
+    const newStr = tool.input.new_str;
+    console.log(`Replacing entire text.'`);
+    return newStr;
+  } else if (tool.name === 'insert') {
     const lineNum = tool.input.line_num;
     const newStr = tool.input.new_str;
     console.log(`Inserting '${newStr}' at line ${lineNum}`);
@@ -219,6 +237,10 @@ New source text; update the translation to correspond to this:\n\`\`\`\n${text}\
   } else if (tool.name === 'update') {
     const oldStr = tool.input.old_str;
     const newStr = tool.input.new_str;
+    if (oldStr === newStr) {
+      console.warn('Old and new strings are the same');
+      return prevTranslatedText;
+    }
     console.log(`Updating '${oldStr}' to '${newStr}'`);
     // Make sure the old string is in the text
     if (!prevTranslatedText.includes(oldStr)) {
@@ -228,9 +250,7 @@ New source text; update the translation to correspond to this:\n\`\`\`\n${text}\
     const newTranslatedText = prevTranslatedText.replace(oldStr, newStr);
     return newTranslatedText;
   }
-
-  console.log(msg);
-  return msg.content[0].text;
+  throw new Error(`Unexpected tool name: ${tool.name}`);
 }
 
 const PORT = process.env.PORT || 8000;
