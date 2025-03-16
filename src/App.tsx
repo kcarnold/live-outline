@@ -239,7 +239,7 @@ const ViewOnly = () => {
   const ydoc = useYDoc();
   const translatedText = useText("translatedText");
   const connectionStatus = useConnectionStatus();
-  const translatedTextContainerRef = useRef<HTMLDivElement>();
+  const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (translatedTextContainerRef.current) {
