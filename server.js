@@ -164,7 +164,7 @@ New source text; update the translation to correspond to this:\n\`\`\`\n${text}\
             }
           },
           "required": [
-            "linu_num",
+            "line_num",
             "new_str"
           ]
         }
