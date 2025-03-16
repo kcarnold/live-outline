@@ -1,3 +1,5 @@
+const ALLOW_EFFICIENT_MODE = false;
+
 import './App.css';
 import { useState, useEffect, useRef } from 'react';
 import { useConnectionStatus, useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
@@ -128,6 +130,9 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
 
 async function getUpdatedTranslation(text: string, translatedText: string, language: string, options: { efficientMode: boolean }): Promise<string> {
   const efficientMode = !!options.efficientMode;
+  if (efficientMode && !ALLOW_EFFICIENT_MODE) {
+    throw new Error('Efficient mode not allowed');
+  }
   const response = await fetch('/api/requestTranslation', {
     method: 'POST',
     headers: {
