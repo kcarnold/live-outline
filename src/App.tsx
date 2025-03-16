@@ -106,6 +106,33 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
   });
 }
 
+async function getUpdatedTranslation(text: string, translatedText: string, language: string, options: { efficientMode: boolean }): Promise<string> {
+  const efficientMode = !!options.efficientMode;
+  const response = await fetch('/api/requestTranslation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: text,
+      prevTranslatedText: translatedText,
+      language,
+      efficientMode,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  if (!result.ok) {
+    throw new Error(`Translation failed: ${result.error}`);
+  }
+  return result.translatedText;
+}
+
+
 function AppInner() {
   const ydoc = useYDoc();
   const [text, setText] = useState("");
@@ -122,30 +149,16 @@ function AppInner() {
     
     setIsTranslating(true);
     try {
-      const response = await fetch('/api/requestTranslation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: text,
-          prevTranslatedText: translatedText,
-          language
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      setTranslatedText(result.translatedText);
-
-    } catch (error) {
-      console.error('Error during translation:', error);
-    } finally {
-      setIsTranslating(false);
+      setTranslatedText(await getUpdatedTranslation(text, translatedText, language, { efficientMode: true }));
+    } catch {
+      console.warn('Efficient mode failed, falling back to non-efficient mode');
+      try {
+        setTranslatedText(await getUpdatedTranslation(text, "", language, { efficientMode: false }));
+      } catch (e) {
+        console.error('Translation failed:', e);
+      } 
     }
+    setIsTranslating(false);
   };
 
   return (
