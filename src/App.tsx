@@ -173,7 +173,7 @@ function AppInner() {
   const ydoc = useYDoc();
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
-  const [lastTranslatedText, setLastTranslatedText] = useState("");
+  const [lastTranslatedText, setLastTranslatedText] = useAsPlainText("lastTranslatedText");
   const sharedMeta = useMap("meta");
   const language = sharedMeta.get("language") as string || "Spanish";
   const setLanguage = (newLanguage: string) => {
