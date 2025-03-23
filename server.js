@@ -55,7 +55,7 @@ app.post('/api/requestTranslation', async (req, res) => {
   try {
     if (efficientMode) {
       // Compute diff between text and prevText
-      let patch = Diff.createPatch("source_text.txt", prevText, text, null, null, { context: 1 });
+      let patch = Diff.createPatch("source_text.txt", prevText, text, null, null, { context: 3 });
       // remove "\ No newline at end of file"
       patch = patch.replace(/\\ No newline at end of file\n/g, '');
       // Remove the first 4 lines since they're just header
