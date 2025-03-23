@@ -1,4 +1,4 @@
-const ALLOW_EFFICIENT_MODE = false;
+const ALLOW_EFFICIENT_MODE = true;
 
 import './App.css';
 import { useState, useEffect, useRef } from 'react';
@@ -128,7 +128,13 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
   });
 }
 
-async function getUpdatedTranslation(text: string, translatedText: string, language: string, options: { efficientMode: boolean }): Promise<string> {
+type TranslationResponse = {
+  ok: boolean,
+  translatedText: string,
+  text: string
+};
+
+async function getUpdatedTranslation(text: string, prevText: string, translatedText: string, language: string, options: { efficientMode: boolean }): Promise<TranslationResponse> {
   const efficientMode = !!options.efficientMode;
   if (efficientMode && !ALLOW_EFFICIENT_MODE) {
     throw new Error('Efficient mode not allowed');
@@ -140,6 +146,7 @@ async function getUpdatedTranslation(text: string, translatedText: string, langu
     },
     body: JSON.stringify({
       text: text,
+      prevText: prevText,
       prevTranslatedText: translatedText,
       language,
       efficientMode,
@@ -154,7 +161,11 @@ async function getUpdatedTranslation(text: string, translatedText: string, langu
   if (!result.ok) {
     throw new Error(`Translation failed: ${result.error}`);
   }
-  return result.translatedText;
+  return {
+    ok: true,
+    translatedText: result.translatedText,
+    text: result.text
+  };
 }
 
 
@@ -162,6 +173,7 @@ function AppInner() {
   const ydoc = useYDoc();
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
+  const [lastTranslatedText, setLastTranslatedText] = useState("");
   const sharedMeta = useMap("meta");
   const language = sharedMeta.get("language") as string || "Spanish";
   const setLanguage = (newLanguage: string) => {
@@ -178,11 +190,15 @@ function AppInner() {
     
     setIsTranslating(true);
     try {
-      setTranslatedText(await getUpdatedTranslation(text, translatedText, language, { efficientMode: true }));
+      const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, { efficientMode: true });
+      setTranslatedText(response.translatedText);
+      setLastTranslatedText(response.text);
     } catch {
       console.warn('Efficient mode failed, falling back to non-efficient mode');
       try {
-        setTranslatedText(await getUpdatedTranslation(text, "", language, { efficientMode: false }));
+        const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, { efficientMode: false });
+        setTranslatedText(response.translatedText);
+        setLastTranslatedText(response.text);
       } catch (e) {
         console.error('Translation failed:', e);
       } 
@@ -213,6 +229,7 @@ function AppInner() {
             className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
             onClick={() => {
               setTranslatedText("");
+              setLastTranslatedText("");
             }}
           >
             Reset
@@ -242,9 +259,11 @@ const ViewOnly = () => {
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (translatedTextContainerRef.current) {
-      translatedTextContainerRef.current.scrollTop = translatedTextContainerRef.current.scrollHeight;
-    }
+    setTimeout(() => {
+      if (translatedTextContainerRef.current) {
+        translatedTextContainerRef.current.scrollTop = translatedTextContainerRef.current.scrollHeight;
+      }
+    }, 100);
   }, [translatedText.toString()]);
   
   return (

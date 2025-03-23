@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { DocumentManager } from '@y-sweet/sdk'
 import Anthropic from '@anthropic-ai/sdk';
+import * as Diff from 'diff';
 
 const anthropicClient = new Anthropic({
   apiKey: process.env['ANTHROPIC_API_KEY'],
@@ -13,7 +14,7 @@ const anthropicClient = new Anthropic({
 const claudeModel = "claude-3-5-haiku-20241022";
 const MAX_TOKENS = 8192;
 
-const documentManager = new DocumentManager(process.env.YSWEET_CONNECTION_STRING);
+const documentManager = new DocumentManager(process.env.YSWEET_CONNECTION_STRING || "");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,20 +38,33 @@ app.post('/api/ys-auth', async (req, res) => {
   res.send(clientToken)
 })
 
+function withTrailingNewline(text) {
+  return text.endsWith('\n') ? text : text + '\n';
+}
+
 app.post('/api/requestTranslation', async (req, res) => {
-  const { text } = req.body;
+  const text = withTrailingNewline(req.body?.text ?? "");
+  const prevText = withTrailingNewline(req.body?.prevText ?? "");
   const prevTranslatedText = req.body?.prevTranslatedText ?? "";
   const language = req.body?.language ?? "";
   const efficientMode = req.body?.efficientMode ?? false;
+  console.log('Request translation:', text, prevText, prevTranslatedText, language, efficientMode);
 
-  let result = {}
+  let result = {};
   let translatedText = "";
   try {
-    if (efficientMode) 
-      translatedText = await getTranslationEfficient(text, prevTranslatedText, language);
-    else
+    if (efficientMode) {
+      // Compute diff between text and prevText
+      let patch = Diff.createPatch("source_text.txt", prevText, text, null, null, { context: 1 });
+      // remove "\ No newline at end of file"
+      patch = patch.replace(/\\ No newline at end of file\n/g, '');
+      // Remove the first 4 lines since they're just header
+      patch = patch.split('\n').slice(4).join('\n');
+      console.log('Patch:', patch);
+      translatedText = await getTranslationEfficient(text, prevTranslatedText, language, patch);
+    } else
       translatedText = await getTranslation(text, prevTranslatedText, language);
-    result = { ok: true, translatedText };
+    result = { ok: true, translatedText, text: text };
   } catch (e) {
     console.error('Error translating:', e);
     result = { ok: false, error: e.message };
@@ -102,8 +116,87 @@ Always give the complete translation, even if it's just a small change or there 
   return translatedText;
 }
 
-const getTranslationEfficient = async (text, prevTranslatedText, language) => {
-  const msg = await anthropicClient.messages.create({
+const getTranslationEfficient = async (text, prevTranslatedText, language, patch) => {
+  const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; use that diff to update the translation by calling the \"insert\", \"update\", or \"replaceEntireText\" tools.
+
+Note: Long tool calls cost us more money. So:
+- If the change is only adding a line, use the \"insert\" tool.
+- When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.
+- Only call \"replaceEntireText\" as a last resort, if the amount of incorrect text is large.
+- If no edits are needed, simply respond with inserting an empty string.
+- Think about the cost of your edits, and try to be efficient.
+- Make all tool calls at once in parallel; don't wait for a response before making the next call.
+- Maintain whitespace; you may need to insert whitespace at the beginning or end of a line.
+
+Source text diff; update the translation to correspond to this:\n\`\`\`\n${patch}\n\`\`\`\n
+
+
+Existing translation (to update):\n\`\`\`\n${prevTranslatedText}\n\`\`\`
+`;
+  console.log('Prompt:', prompt);
+
+  const tools = [
+    {
+      "name": "replaceEntireText",
+      "description": "Replace the entire text with a new translation",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "new_str": {
+            "type": "string",
+            "description": "The new translation"
+          }
+        },
+        "required": [
+          "new_str"
+        ]
+      }
+    },
+    {
+      "name": "insert",
+      "description": "Insert text at a given line number",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "line_num": {
+            "type": "integer",
+            "description": "Line number of insertion point (0 = insert at beginning, 1 = insert after first line, -1 = insert at end"
+          },
+          "new_str": {
+            "type": "string",
+            "description": "Text to insert"
+          }
+        },
+        "required": [
+          "line_num",
+          "new_str"
+        ]
+      }
+    },
+    {
+      "name": "update",
+      "description": "Substitute one string for another",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "old_str": {
+            "type": "string",
+          },
+          "new_str": {
+            "type": "string",
+            "description": "Text to replace old_str with"
+          }
+        },
+        "required": [
+          "old_str",
+          "new_str"
+        ]
+      },
+      "cache_control": {"type": "ephemeral"}
+    }
+  ];
+
+  const msg = await anthropicClient.beta.messages.create({
     model: claudeModel,
     max_tokens: MAX_TOKENS,
     temperature: 0.1,
@@ -113,103 +206,44 @@ const getTranslationEfficient = async (text, prevTranslatedText, language) => {
         "content": [
           {
             "type": "text",
-            "text": `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. Call the \"insert\", \"update\", or \"replaceEntireText\" tools to update the translation.
-
-Note: Long tool calls cost us more money. So:
-- If the change is only adding a line, use the \"insert\" tool.
-- When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.
-- Only call \"replaceEntireText\" as a last resort, if the amount of incorrect text is large.
-- If no edits are needed, simply respond with inserting an empty string.
-- Think about the cost of your edits, and try to be efficient.
-
-Existing translation (to update):\n\`\`\`\n${prevTranslatedText}\n\`\`\`
-
-New source text; update the translation to correspond to this:\n\`\`\`\n${text}\n\`\`\`\n`
+            "text": prompt
           }
         ]
       }
     ],
-    tools: [
-      {
-        "name": "replaceEntireText",
-        "description": "Replace the entire text with a new translation",
-        "input_schema": {
-          "type": "object",
-          "properties": {
-            "new_str": {
-              "type": "string",
-              "description": "The new translation"
-            }
-          },
-          "required": [
-            "new_str"
-          ]
-        }
-      },
-      {
-        "name": "insert",
-        "description": "Insert text at a given line number",
-        "input_schema": {
-          "type": "object",
-          "properties": {
-            "line_num": {
-              "type": "integer",
-              "description": "Line number of insertion point (0 = insert at beginning, 1 = insert after first line, -1 = insert at end"
-            },
-            "new_str": {
-              "type": "string",
-              "description": "Text to insert"
-            }
-          },
-          "required": [
-            "line_num",
-            "new_str"
-          ]
-        }
-      },
-      {
-        "name": "update",
-        "description": "Substitute one string for another",
-        "input_schema": {
-          "type": "object",
-          "properties": {
-            "old_str": {
-              "type": "string",
-            },
-            "new_str": {
-              "type": "string",
-              "description": "Text to replace old_str with"
-            }
-          },
-          "required": [
-            "old_str",
-            "new_str"
-          ]
-        }
-      }
-    ]
+    tools: tools,
+    //betas: ["token-efficient-tools-2025-02-19"]
   });
 
   // Extract the tool call
   if (msg.stop_reason !== 'tool_use') {
     throw new Error('Expected tool_use stop reason');
   }
-  console.dir(msg, { depth: null });
-  const tool = msg.content.find(
-    (content) => content.type === 'tool_use',
-  );
-
   // The tools assumed that prevTranslatedText ended with a newline, so we add one here if it doesn't
   if (prevTranslatedText.length > 0 && prevTranslatedText[prevTranslatedText.length - 1] !== '\n') {
     prevTranslatedText += '\n';
   }
+
+  console.dir(msg, { depth: null });
+  let newTranslatedText = prevTranslatedText
+  for (const content of msg.content) {
+    if (content.type === 'tool_use') {
+      newTranslatedText = applyTool(content, newTranslatedText);
+    }
+  }
+
+  return newTranslatedText;
+
+}
+
+function applyTool(tool, prevTranslatedText) {
 
   if (tool.name === 'replaceEntireText') {
     const newStr = tool.input.new_str;
     console.log(`Replacing entire text.'`);
     return newStr;
   } else if (tool.name === 'insert') {
-    const lineNum = tool.input.line_num;
+    let lineNum = tool.input.line_num;
     const newStr = tool.input.new_str;
     console.log(`Inserting '${newStr}' at line ${lineNum}`);
     // Find where to insert the new text
