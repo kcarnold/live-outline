@@ -117,13 +117,11 @@ Always give the complete translation, even if it's just a small change or there 
 }
 
 const getTranslationEfficient = async (text, prevTranslatedText, language, patch) => {
-  const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; use that diff to update the translation by calling the \"insert\", \"update\", or \"replaceEntireText\" tools.
+  const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; use that diff to update the translation by calling the \"update\" or \"replaceEntireText\" tools.
 
 Note: Long tool calls cost us more money. So:
-- If the change is only adding a line, use the \"insert\" tool.
 - When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.
 - Only call \"replaceEntireText\" as a last resort, if the amount of incorrect text is large.
-- If no edits are needed, simply respond with inserting an empty string.
 - Think about the cost of your edits, and try to be efficient.
 - Make all tool calls at once in parallel; don't wait for a response before making the next call.
 - Maintain whitespace; you may need to insert whitespace at the beginning or end of a line.
@@ -152,27 +150,27 @@ Existing translation (to update):\n\`\`\`\n${prevTranslatedText}\n\`\`\`
         ]
       }
     },
-    {
-      "name": "insert",
-      "description": "Insert text at a given line number",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "line_num": {
-            "type": "integer",
-            "description": "Line number of insertion point (0 = insert at beginning, 1 = insert after first line, -1 = insert at end"
-          },
-          "new_str": {
-            "type": "string",
-            "description": "Text to insert"
-          }
-        },
-        "required": [
-          "line_num",
-          "new_str"
-        ]
-      }
-    },
+    // {
+    //   "name": "insert",
+    //   "description": "Insert text at a given line number",
+    //   "input_schema": {
+    //     "type": "object",
+    //     "properties": {
+    //       "line_num": {
+    //         "type": "integer",
+    //         "description": "Line number of insertion point (0 = insert at beginning, 1 = insert after first line, -1 = insert at end"
+    //       },
+    //       "new_str": {
+    //         "type": "string",
+    //         "description": "Text to insert (including newline if needed)"
+    //       }
+    //     },
+    //     "required": [
+    //       "line_num",
+    //       "new_str"
+    //     ]
+    //   }
+    // },
     {
       "name": "update",
       "description": "Substitute one string for another",
