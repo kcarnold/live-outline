@@ -84,7 +84,8 @@ async function getUpdatedTranslation(text: string, prevText: string, translatedT
 }
 
 
-function AppInner() {
+function AppInner({isEditor}: {isEditor: boolean}) {
+  const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
@@ -95,6 +96,19 @@ function AppInner() {
     sharedMeta.set("language", newLanguage);
   };
   const [isTranslating, setIsTranslating] = useState(false);
+
+  const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Needs a delay to ensure the scroll happens after the DOM has updated
+    setTimeout(() => {
+      if (translatedTextContainerRef.current) {
+        translatedTextContainerRef.current.scrollTop = translatedTextContainerRef.current.scrollHeight;
+      }
+    }, 100);
+  }, [translatedText]);
+  
+
 
   const doTranslation = async () => {
     if (!text || !language) {
@@ -122,14 +136,27 @@ function AppInner() {
   };
 
   return (
-    <div className="flex h-dvh">
-      <div className="flex flex-col w-1/2 h-full">
-        <div className="flex-grow overflow-auto p-4">
-          <div className="h-full">
-            <ProseMirrorEditor yDoc={ydoc} onTextChanged={setText} editable={true} onTranslationTrigger={() => doTranslation()}/>
-          </div>
+    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
+      <div className="absolute top-2 right-2 z-10">
+        <div className={`px-1 py-1 rounded-full text-xs font-medium ${
+          connectionStatus === 'connected' 
+            ? 'bg-green-500 text-white' 
+            : connectionStatus === 'connecting' 
+            ? 'bg-yellow-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          {connectionStatus === 'connected' 
+            ? 'Connected' 
+            : connectionStatus === 'connecting' 
+            ? 'Connecting...' 
+            : 'Disconnected'}
         </div>
-        <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
+      </div>
+      <div className="flex flex-col w-full md:w-1/2 h-full">
+        <div className="flex-grow overflow-auto p-4">
+          <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
+        </div>
+        {isEditor && <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
           {/* Language selector */}
           <select 
             className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
@@ -158,9 +185,9 @@ function AppInner() {
           >
             {isTranslating ? 'Translating...' : 'Translate'}
           </button>
-        </div>
+        </div> }
       </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto">
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
         <Remark>
           {translatedText}
         </Remark>
@@ -168,53 +195,6 @@ function AppInner() {
     </div>
   );
 }
-
-const ViewOnly = () => {
-  const ydoc = useYDoc();
-  const translatedText = useText("translatedText");
-  const connectionStatus = useConnectionStatus();
-  const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (translatedTextContainerRef.current) {
-        translatedTextContainerRef.current.scrollTop = translatedTextContainerRef.current.scrollHeight;
-      }
-    }, 100);
-  }, [translatedText.toString()]);
-  
-  return (
-    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
-      <div className="absolute top-2 right-2 z-10">
-        <div className={`px-1 py-1 rounded-full text-xs font-medium ${
-          connectionStatus === 'connected' 
-            ? 'bg-green-500 text-white' 
-            : connectionStatus === 'connecting' 
-            ? 'bg-yellow-500 text-white' 
-            : 'bg-red-500 text-white'
-        }`}>
-          {connectionStatus === 'connected' 
-            ? 'Connected' 
-            : connectionStatus === 'connecting' 
-            ? 'Connecting...' 
-            : 'Disconnected'}
-        </div>
-      </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full p-4 overflow-auto">
-        <div className="p-4">
-          <div className="h-full">
-            <ProseMirrorEditor yDoc={ydoc} editable={false} onTextChanged={() => null} />
-          </div>
-        </div>
-      </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
-        <Remark>
-          {translatedText.toString()}
-        </Remark>
-      </div>
-    </div>
-  );
-};
 
 const App = () => {
   const docId = "example-doc";
@@ -233,7 +213,7 @@ const App = () => {
   
   return (
     <YDocProvider docId={docId} authEndpoint={authEndpoint}>
-      {isEditor ? <AppInner /> : <ViewOnly />}
+      <AppInner isEditor={isEditor} />
     </YDocProvider>
   );
 };
