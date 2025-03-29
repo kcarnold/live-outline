@@ -68,7 +68,6 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
   );
 
   return (
-    <div className="h-full">
     <ProseMirror
       state={editorState}
       editable={() => editable}
@@ -85,7 +84,6 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
     >
       <ProseMirrorDoc />
     </ProseMirror>
-    </div>
   );
 
 };
@@ -207,7 +205,9 @@ function AppInner() {
     <div className="flex h-dvh">
       <div className="flex flex-col w-1/2 h-full">
         <div className="flex-grow overflow-auto p-4">
-          <ProseMirrorEditor yDoc={ydoc} onTextChanged={setText} editable={true} onTranslationTrigger={() => doTranslation()}/>
+          <div className="h-full">
+            <ProseMirrorEditor yDoc={ydoc} onTextChanged={setText} editable={true} onTranslationTrigger={() => doTranslation()}/>
+          </div>
         </div>
         <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
           {/* Language selector */}
@@ -282,7 +282,9 @@ const ViewOnly = () => {
       </div>
       <div className="w-full md:w-1/2 h-1/2 md:h-full p-4 overflow-auto">
         <div className="p-4">
-          <ProseMirrorEditor yDoc={ydoc} editable={false} onTextChanged={() => null} />
+          <div className="h-full">
+            <ProseMirrorEditor yDoc={ydoc} editable={false} onTextChanged={() => null} />
+          </div>
         </div>
       </div>
       <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
