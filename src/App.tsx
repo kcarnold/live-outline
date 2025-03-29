@@ -26,7 +26,9 @@ const useAsPlainText = (name: string): [string, (newText: string) => void] => {
   }, [sharedText]);
 
   const setPlainText = (newText: string) => {
-    const delta = diffToDelta(diff(text, newText));
+    // Get the current text value directly from sharedText instead of using potentially stale state
+    const currentText = sharedText.toString();
+    const delta = diffToDelta(diff(currentText, newText));
     sharedText.applyDelta(delta);
   };
   
