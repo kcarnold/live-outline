@@ -7,6 +7,8 @@ import diff from 'fast-diff';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
 import { Remark } from 'react-remark';
+import { ConfigProvider, useConfig } from './ConfigContext';
+import ConfigPanel from './ConfigPanel';
 
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 const useAsPlainText = (name: string): [string, (newText: string) => void] => {
@@ -96,6 +98,8 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     sharedMeta.set("language", newLanguage);
   };
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const { showOriginalText, fontSize } = useConfig();
 
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -137,7 +141,14 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
-      <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
+        <button
+          onClick={() => setShowConfigPanel(!showConfigPanel)}
+          className="bg-gray-200 p-1 rounded-full hover:bg-gray-300"
+          title="Settings"
+        >
+          ⚙️
+        </button>
         <div className={`px-1 py-1 rounded-full text-xs font-medium ${
           connectionStatus === 'connected' 
             ? 'bg-green-500 text-white' 
@@ -152,7 +163,8 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             : 'Disconnected'}
         </div>
       </div>
-      <div className="flex flex-col w-full md:w-1/2 h-full">
+      {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
+      {(isEditor || showOriginalText) && <div className="flex flex-col w-full md:w-1/2 h-full">
         <div className="flex-grow overflow-auto p-4">
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         </div>
@@ -186,8 +198,8 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             {isTranslating ? 'Translating...' : 'Translate'}
           </button>
         </div> }
-      </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-red-950 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
+      </div>}
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-red-950 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
         <Remark>
           {translatedText}
         </Remark>
@@ -212,9 +224,11 @@ const App = () => {
   };
   
   return (
-    <YDocProvider docId={docId} authEndpoint={authEndpoint}>
-      <AppInner isEditor={isEditor} />
-    </YDocProvider>
+    <ConfigProvider>
+      <YDocProvider docId={docId} authEndpoint={authEndpoint}>
+        <AppInner isEditor={isEditor} />
+      </YDocProvider>
+    </ConfigProvider>
   );
 };
 
