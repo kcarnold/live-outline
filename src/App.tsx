@@ -103,6 +103,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const leftSideShown = isEditor || showOriginalText;
+  const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
+
   useEffect(() => {
     // Needs a delay to ensure the scroll happens after the DOM has updated
     setTimeout(() => {
@@ -164,7 +167,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         </div>
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
-      {(isEditor || showOriginalText) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
+      {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
         <div className="flex-grow overflow-auto p-4 touch-pan-y">
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         </div>
@@ -199,7 +202,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
           </button>
         </div> }
       </div>}
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y" ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
+      <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
         <Remark>
           {translatedText}
         </Remark>
