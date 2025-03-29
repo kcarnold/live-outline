@@ -5,6 +5,8 @@ interface ConfigContextType {
   setShowOriginalText: (show: boolean) => void;
   fontSize: number;
   setFontSize: (size: number) => void;
+  showTranscript: boolean;
+  setShowTranscript: (show: boolean) => void;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -12,13 +14,16 @@ const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [showOriginalText, setShowOriginalText] = useState(true);
   const [fontSize, setFontSize] = useState(16);
+  const [showTranscript, setShowTranscript] = useState(true);
 
   return (
     <ConfigContext.Provider value={{
       showOriginalText,
       setShowOriginalText,
       fontSize,
-      setFontSize
+      setFontSize,
+      showTranscript,
+      setShowTranscript
     }}>
       {children}
     </ConfigContext.Provider>

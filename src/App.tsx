@@ -93,7 +93,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   const [text, setText] = useState("");
-  const showTranscript = true;
   const [transcript, setTranscript] = useAsPlainText("transcript");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
   const [lastTranslatedText, setLastTranslatedText] = useAsPlainText("lastTranslatedText");
@@ -104,7 +103,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   };
   const [isTranslating, setIsTranslating] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
-  const { showOriginalText, fontSize } = useConfig();
+  const { showOriginalText, fontSize, showTranscript } = useConfig();
 
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
 

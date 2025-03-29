@@ -6,7 +6,7 @@ interface ConfigPanelProps {
 }
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
-  const { showOriginalText, setShowOriginalText, fontSize, setFontSize } = useConfig();
+  const { showOriginalText, setShowOriginalText, fontSize, setFontSize, showTranscript, setShowTranscript } = useConfig();
 
   return (
     <div className="absolute right-0 top-14 bg-white shadow-lg rounded-lg p-4 z-20 w-64 border border-gray-200">
@@ -39,6 +39,18 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           onChange={(e) => setFontSize(parseInt(e.target.value))}
           className="w-full"
         />
+      </div>
+
+      <div className="mb-4">
+        <label className="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showTranscript}
+            onChange={(e) => setShowTranscript(e.target.checked)}
+            className="rounded"
+          />
+          <span>Show Transcript</span>
+        </label>
       </div>
     </div>
   );
