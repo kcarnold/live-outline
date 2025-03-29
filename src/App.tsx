@@ -8,7 +8,6 @@ import * as Y from 'yjs';
 
 // ProseMirror imports
 import { EditorState } from 'prosemirror-state';
-import { baseKeymap } from 'prosemirror-commands';
 import {
   ProseMirror,
   ProseMirrorDoc,
@@ -16,7 +15,7 @@ import {
 } from "@handlewithcare/react-prosemirror";
 
 
-import { buildInputRules, buildKeymap } from 'prosemirror-example-setup';
+import { exampleSetup } from 'prosemirror-example-setup';
 import { ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
 import { keymap } from 'prosemirror-keymap';
 import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
@@ -48,9 +47,9 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
     EditorState.create({ schema, plugins: [
       reactKeys(),
       ySyncPlugin(yXmlFragment),
-        //yCursorPlugin(yDoc.getMap('cursors')),
-        yUndoPlugin(),
-        buildInputRules(schema),
+      //yCursorPlugin(yDoc.getMap('cursors')),
+      yUndoPlugin(),
+      ...exampleSetup({ schema, history: false, menuBar: false }),
         keymap({
           'Mod-z': undo,
           'Mod-y': redo,
@@ -65,8 +64,6 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
             return false;
           }
         }),
-        keymap(buildKeymap(schema)),
-        keymap(baseKeymap)
     ] })
   );
 
