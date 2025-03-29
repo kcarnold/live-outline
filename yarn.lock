@@ -389,10 +389,10 @@
     "@eslint/core" "^0.12.0"
     levn "^0.4.1"
 
-"@handlewithcare/react-prosemirror@^2.3.3":
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/@handlewithcare/react-prosemirror/-/react-prosemirror-2.3.3.tgz#c77b29c67bced24da67d216fda15f768ff61add9"
-  integrity sha512-RIquyor5q8ADhfjY6e/Cxymgyv7PHZamxtUWCS6esfuduFRIO8RjaG38PrxwxVnKSwSSmOI1UjYLAkWFzip8/g==
+"@handlewithcare/react-prosemirror@^2.3.5":
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/@handlewithcare/react-prosemirror/-/react-prosemirror-2.3.5.tgz#c04cfd85d4e27ae2f4db2cd1a6132b3bada08e2d"
+  integrity sha512-3hJfBzQGSeYG7yu/q/H3xPRitYpDjYkr+7DxY6d2WkVyEUq2nc2ZfRI/CPK8+s0LqgEJZjExshP/DzIe4g84yA==
   dependencies:
     classnames "^2.3.2"
     react-reconciler "0.31.0"
