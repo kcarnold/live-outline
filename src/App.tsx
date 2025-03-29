@@ -140,7 +140,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
+    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
         <button
           onClick={() => setShowConfigPanel(!showConfigPanel)}
@@ -165,7 +165,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
       {(isEditor || showOriginalText) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
-        <div className="flex-grow overflow-auto p-4">
+        <div className="flex-grow overflow-auto p-4 touch-pan-y">
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         </div>
         {isEditor && <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
@@ -199,7 +199,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
           </button>
         </div> }
       </div>}
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-red-950 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y" ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
         <Remark>
           {translatedText}
         </Remark>

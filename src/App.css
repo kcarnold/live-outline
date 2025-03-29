@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 @layer base {
+  html, body {
+    overscroll-behavior: none;
+  }
+
   ul, ol {
     margin: initial;
     list-style-type: initial;
