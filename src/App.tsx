@@ -187,7 +187,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
           </button>
         </div> }
       </div>
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-sky-500 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
+      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-red-950 text-white p-2 overflow-auto pb-16" ref={translatedTextContainerRef}>
         <Remark>
           {translatedText}
         </Remark>
