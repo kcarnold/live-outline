@@ -277,7 +277,9 @@ function applyTool(tool, prevTranslatedText) {
       console.error(`Old string '${oldStr}' not found in text`);
       throw new Error('Old string not found in text');
     }
-    const newTranslatedText = prevTranslatedText.replace(oldStr, newStr);
+    // Replace the *last* occurrence of the old string with the new string
+    const lastIndex = prevTranslatedText.lastIndexOf(oldStr);
+    const newTranslatedText = prevTranslatedText.slice(0, lastIndex) + newStr + prevTranslatedText.slice(lastIndex + oldStr.length);
     return newTranslatedText;
   }
   throw new Error(`Unexpected tool name: ${tool.name}`);
