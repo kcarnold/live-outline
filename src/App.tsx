@@ -93,6 +93,8 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   const [text, setText] = useState("");
+  const showTranscript = true;
+  const [transcript, setTranscript] = useAsPlainText("transcript");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
   const [lastTranslatedText, setLastTranslatedText] = useAsPlainText("lastTranslatedText");
   const sharedMeta = useMap("meta");
@@ -171,9 +173,12 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
-        {isEditor && <SpeechTranscriber />}
+        {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
         <div className="flex-grow overflow-auto p-4 touch-pan-y">
+        {showTranscript ?
+          <div>{transcript}</div> :
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
+        }
         </div>
         {isEditor && <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
           {/* Language selector */}

@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { RealtimeTranscriber } from 'assemblyai/streaming';
 import RecordRTC from 'recordrtc';
 
-function SpeechTranscriber() {
+function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) => void}) {
   const realtimeTranscriber = useRef<RealtimeTranscriber | null>(null);
   const recorder = useRef<RecordRTC | null>(null)
   const [isRecording, setIsRecording] = useState(false)
@@ -39,6 +39,7 @@ function SpeechTranscriber() {
         }
       }
       setTranscript(msg)
+      onTranscript(msg);
     });
 
     realtimeTranscriber.current.on('error', event => {
