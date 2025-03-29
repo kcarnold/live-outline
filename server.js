@@ -3,6 +3,7 @@ import express, { static as serveStatic, json } from "express";
 import { join, dirname } from "path";
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { AssemblyAI } from "assemblyai";
 import { DocumentManager } from '@y-sweet/sdk'
 import Anthropic from '@anthropic-ai/sdk';
 import * as Diff from 'diff';
@@ -22,6 +23,21 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.static("public"));
 app.use(json());
+
+const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY });
+app.use(
+  "/assemblyai.js",
+  express.static(
+    join(__dirname, "node_modules/assemblyai/dist/assemblyai.umd.js"),
+  ),
+);
+ 
+// AAI
+app.get("/api/aai_token", async (_req, res) => {
+  const token = await aai.realtime.createTemporaryToken({ expires_in: 3600 });
+  res.json({ token });
+});
+ 
 
 
 // Y-Sweet

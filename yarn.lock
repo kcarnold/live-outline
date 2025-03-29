@@ -1216,6 +1216,13 @@ array-flatten@1.1.1:
   resolved "https://registry.yarnpkg.com/array-flatten/-/array-flatten-1.1.1.tgz#9a5f699051b1e7073328f2a008968b64ea2955d2"
   integrity sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg==
 
+assemblyai@^4.9.0:
+  version "4.9.0"
+  resolved "https://registry.yarnpkg.com/assemblyai/-/assemblyai-4.9.0.tgz#a1d443987c546760f61e4f828afde40d7d20a359"
+  integrity sha512-YUvkVIdMKvMLNQ07zWNma9YWvdSoGZy9RuJ/fB5uceAgDnTL2uo8sAlytkt52hD8DJ61xmZkfO9jkjXl3sZTiw==
+  dependencies:
+    ws "^8.18.0"
+
 assertion-error@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/assertion-error/-/assertion-error-2.0.1.tgz#f641a196b335690b1070bf00b6e7593fec190bf7"
@@ -2792,6 +2799,20 @@ prosemirror-model@^1.0.0, prosemirror-model@^1.20.0, prosemirror-model@^1.21.0, 
   dependencies:
     orderedmap "^2.0.0"
 
+prosemirror-model@^1.25.0:
+  version "1.25.0"
+  resolved "https://registry.yarnpkg.com/prosemirror-model/-/prosemirror-model-1.25.0.tgz#c147113edc0718a14f03881e4c20367d0221f7af"
+  integrity sha512-/8XUmxWf0pkj2BmtqZHYJipTBMHIdVjuvFzMvEoxrtyGNmfvdhBiRwYt/eFwy2wA9DtBW3RLqvZnjurEkHaFCw==
+  dependencies:
+    orderedmap "^2.0.0"
+
+prosemirror-schema-basic@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/prosemirror-schema-basic/-/prosemirror-schema-basic-1.2.4.tgz#389ce1ec09b8a30ea9bbb92c58569cb690c2d695"
+  integrity sha512-ELxP4TlX3yr2v5rM7Sb70SqStq5NvI15c0j9j/gjsrO5vaw+fnnpovCLEGIcpeGfifkuqJwl4fon6b+KdrODYQ==
+  dependencies:
+    prosemirror-model "^1.25.0"
+
 prosemirror-schema-list@^1.0.0:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/prosemirror-schema-list/-/prosemirror-schema-list-1.5.1.tgz#5869c8f749e8745c394548bb11820b0feb1e32f5"
@@ -3599,7 +3620,7 @@ wrap-ansi@^7.0.0:
     string-width "^4.1.0"
     strip-ansi "^6.0.0"
 
-ws@^8.18.1:
+ws@^8.18.0, ws@^8.18.1:
   version "8.18.1"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.1.tgz#ea131d3784e1dfdff91adb0a4a116b127515e3cb"
   integrity sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w==

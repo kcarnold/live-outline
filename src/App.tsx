@@ -9,6 +9,7 @@ import ProseMirrorEditor from './ProseMirrorEditor';
 import { Remark } from 'react-remark';
 import { ConfigProvider, useConfig } from './ConfigContext';
 import ConfigPanel from './ConfigPanel';
+import SpeechTranscriber from './SpeechTranscriber';
 
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 const useAsPlainText = (name: string): [string, (newText: string) => void] => {
@@ -168,6 +169,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
+        {isEditor && <SpeechTranscriber />}
         <div className="flex-grow overflow-auto p-4 touch-pan-y">
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         </div>
