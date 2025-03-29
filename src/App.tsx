@@ -164,7 +164,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         </div>
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
-      {(isEditor || showOriginalText) && <div className="flex flex-col w-full md:w-1/2 h-full">
+      {(isEditor || showOriginalText) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
         <div className="flex-grow overflow-auto p-4">
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         </div>
