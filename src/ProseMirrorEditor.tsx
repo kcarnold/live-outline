@@ -1,3 +1,4 @@
+// TODO: Replace this with the example code from https://github.com/handlewithcarecollective/react-prosemirror/blob/main/demo/main.tsx
 import * as Y from 'yjs';
 
 import {
@@ -42,21 +43,21 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
       ySyncPlugin(yXmlFragment),
       //yCursorPlugin(yDoc.getMap('cursors')),
       yUndoPlugin(),
-      ...exampleSetup({ schema, history: false, menuBar: false }),
-        keymap({
-          'Mod-z': undo,
-          'Mod-y': redo,
-          'Mod-Shift-z': redo,
-          'Tab': sinkListItem(schema.nodes.list_item),
-          'Shift-Tab': liftListItem(schema.nodes.list_item),
-          'Mod-Enter': (_state, _dispatch) => {
-            if (onTranslationTriggerRef.current) {
-              onTranslationTriggerRef.current();
-              return true;
-            }
-            return false;
+      keymap({
+        'Mod-z': undo,
+        'Mod-y': redo,
+        'Mod-Shift-z': redo,
+        'Tab': sinkListItem(schema.nodes.list_item),
+        'Shift-Tab': liftListItem(schema.nodes.list_item),
+        'Mod-Enter': (_state, _dispatch) => {
+          if (onTranslationTriggerRef.current) {
+            onTranslationTriggerRef.current();
+            return true;
           }
-        }),
+          return false;
+        }
+      }),
+      ...exampleSetup({ schema, history: false, menuBar: false }),
     ] })
   );
 
