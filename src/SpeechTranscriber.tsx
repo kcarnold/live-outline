@@ -34,7 +34,7 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
       keys.sort((a, b) => a - b);
       for (const key of keys) {
         if (texts[key]) {
-          msg += ` ${texts[key]}`
+          msg += `\n${texts[key]}`
           console.log(msg)
         }
       }
