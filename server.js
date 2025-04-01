@@ -34,7 +34,8 @@ app.use(
  
 // AAI
 app.get("/api/aai_token", async (_req, res) => {
-  const token = await aai.realtime.createTemporaryToken({ expires_in: 3600 });
+  const hours = 4;
+  const token = await aai.realtime.createTemporaryToken({ expires_in: hours * 60 * 60 });
   res.json({ token });
 });
  
