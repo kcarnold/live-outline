@@ -1,3 +1,25 @@
+# To set up
+
+- Copy `template.env` to `.env`
+- Get a [y-sweet account](https://jamsocket.com/) (free is fine). Put the API key it gives you in `.env`.
+- Get an [Anthropic API key](https://console.anthropic.com/settings/keys). Likewise, it goes in `.env`.
+- Run `yarn` to install packages.
+
+## To run
+
+Backend:
+
+```
+yarn run dev:server
+```
+
+Frontend:
+
+```
+yarn run dev
+```
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
