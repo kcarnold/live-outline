@@ -220,7 +220,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 }
 
 const App = () => {
-  const docId = "example-doc";
+  const docId = "doc2";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const authEndpoint = async () => {
