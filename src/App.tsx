@@ -1,5 +1,3 @@
-const ALLOW_EFFICIENT_MODE = true;
-
 import './App.css';
 import { useState, useEffect, useRef } from 'react';
 import { useConnectionStatus, useMap, useText, useYDoc, YDocProvider } from '@y-sweet/react';
@@ -54,11 +52,7 @@ type TranslationResponse = {
   text: string
 };
 
-async function getUpdatedTranslation(text: string, prevText: string, translatedText: string, language: string, options: { efficientMode: boolean }): Promise<TranslationResponse> {
-  const efficientMode = !!options.efficientMode;
-  if (efficientMode && !ALLOW_EFFICIENT_MODE) {
-    throw new Error('Efficient mode not allowed');
-  }
+async function getUpdatedTranslation(text: string, prevText: string, translatedText: string, language: string, options: {}): Promise<TranslationResponse> {
   const response = await fetch('/api/requestTranslation', {
     method: 'POST',
     headers: {
@@ -69,7 +63,7 @@ async function getUpdatedTranslation(text: string, prevText: string, translatedT
       prevText: prevText,
       prevTranslatedText: translatedText,
       language,
-      efficientMode,
+      efficientMode: true,
     }),
   });
 
