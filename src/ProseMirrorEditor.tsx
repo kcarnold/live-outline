@@ -1,4 +1,8 @@
 // TODO: Replace this with the example code from https://github.com/handlewithcarecollective/react-prosemirror/blob/main/demo/main.tsx
+// Note: other useful references:
+// - https://github.com/ProseMirror/website/blob/master/example/markdown/index.js
+// - https://github.com/ProseMirror/website/blob/master/src/collab/schema.js (may not be needed)
+
 import * as Y from 'yjs';
 
 import {
@@ -44,6 +48,7 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
       //yCursorPlugin(yDoc.getMap('cursors')),
       yUndoPlugin(),
       keymap({
+        // https://github.com/yjs/yjs-demos/blob/main/prosemirror/prosemirror.js#L36
         'Mod-z': undo,
         'Mod-y': redo,
         'Mod-Shift-z': redo,
