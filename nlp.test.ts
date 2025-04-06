@@ -127,10 +127,8 @@ describe('nlp.ts', () => {
       // Create a mock AnthropicProvider with mock client
       mockProvider = {
         anthropicClient: {
-          beta: {
-            messages: {
-              create: vi.fn(),
-            },
+          messages: {
+            create: vi.fn(),
           },
         },
         defaultModel,
@@ -164,7 +162,7 @@ describe('nlp.ts', () => {
         }]
       };
       
-      mockProvider.anthropicClient.beta.messages.create.mockResolvedValue(mockResponse);
+      mockProvider.anthropicClient.messages.create.mockResolvedValue(mockResponse);
 
       // Call the function with test data
       const prevSourceText = 'This is a test string. More text here.';
@@ -191,8 +189,8 @@ describe('nlp.ts', () => {
       );
 
       // Verify the message was created with correct parameters
-      expect(mockProvider.anthropicClient.beta.messages.create).toHaveBeenCalled();
-      const callArgs = mockProvider.anthropicClient.beta.messages.create.mock.calls[0][0];
+      expect(mockProvider.anthropicClient.messages.create).toHaveBeenCalled();
+      const callArgs = mockProvider.anthropicClient.messages.create.mock.calls[0][0];
       expect(callArgs.model).toBe(mockProvider.defaultModel);
       expect(callArgs.max_tokens).toBe(mockProvider.maxTokens);
       expect(callArgs.temperature).toBe(0.1);
@@ -237,7 +235,7 @@ describe('nlp.ts', () => {
         }]
       };
       
-      mockProvider.anthropicClient.beta.messages.create.mockResolvedValue(mockResponse);
+      mockProvider.anthropicClient.messages.create.mockResolvedValue(mockResponse);
 
       // Call the function with test data
       const prevSourceText = 'First sentence. Second sentence.';
@@ -254,7 +252,7 @@ describe('nlp.ts', () => {
       );
 
       // Verify the API call
-      expect(mockProvider.anthropicClient.beta.messages.create).toHaveBeenCalled();
+      expect(mockProvider.anthropicClient.messages.create).toHaveBeenCalled();
       
       // Verify the return value has the update applied - use trim() to handle potential newline differences
       expect(result.trim()).toBe('First modified translated sentence. Second translated sentence.'.trim());
@@ -294,7 +292,7 @@ describe('nlp.ts', () => {
         ]
       };
       
-      mockProvider.anthropicClient.beta.messages.create.mockResolvedValue(mockResponse);
+      mockProvider.anthropicClient.messages.create.mockResolvedValue(mockResponse);
 
       // Call the function with test data
       const prevSourceText = 'First sentence. Second sentence. Third sentence.';
@@ -335,7 +333,7 @@ describe('nlp.ts', () => {
         }]
       };
       
-      mockProvider.anthropicClient.beta.messages.create.mockResolvedValue(mockResponse);
+      mockProvider.anthropicClient.messages.create.mockResolvedValue(mockResponse);
 
       // Call the function with test data without trailing newline
       const prevSourceText = 'A simple test.';
@@ -352,7 +350,7 @@ describe('nlp.ts', () => {
       );
 
       // Verify the function added a newline before processing
-      const callArgs = mockProvider.anthropicClient.beta.messages.create.mock.calls[0][0];
+      const callArgs = mockProvider.anthropicClient.messages.create.mock.calls[0][0];
       expect(callArgs.messages[0].content[0].text).toContain('A simple translated test.\n');
       
       // Verify the result - use trim() to handle potential newline differences
@@ -369,7 +367,7 @@ describe('nlp.ts', () => {
         content: [{ type: 'text', text: 'Some text response' }]
       };
       
-      mockProvider.anthropicClient.beta.messages.create.mockResolvedValue(mockResponse);
+      mockProvider.anthropicClient.messages.create.mockResolvedValue(mockResponse);
 
       // Call the function with test data
       const prevSourceText = 'Test.';
@@ -406,7 +404,7 @@ describe('nlp.ts', () => {
         }]
       };
       
-      mockProvider.anthropicClient.beta.messages.create.mockResolvedValue(mockResponse);
+      mockProvider.anthropicClient.messages.create.mockResolvedValue(mockResponse);
 
       // Call the function with empty previous translated text
       const prevSourceText = '';

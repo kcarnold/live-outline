@@ -142,7 +142,7 @@ Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${pat
     }
   ];
 
-  const msg = await provider.anthropicClient.beta.messages.create({
+  const msg = await provider.anthropicClient.messages.create({
     model: provider.defaultModel,
     max_tokens: provider.maxTokens,
     temperature: 0.1,
@@ -161,7 +161,6 @@ Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${pat
         ],
       },
     ],
-    //betas: ["token-efficient-tools-2025-02-19"]
   });
 
   console.dir(msg, { depth: null });
