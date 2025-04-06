@@ -143,7 +143,7 @@ Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${pat
 
   const msg = await provider.anthropicClient.beta.messages.create({
     model: provider.defaultModel,
-    maxTokens: provider.maxTokens,
+    max_tokens: provider.maxTokens,
     temperature: 0.1,
     messages: [
       {
