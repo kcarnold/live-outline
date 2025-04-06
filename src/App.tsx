@@ -106,6 +106,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const { showOriginalText, fontSize, showTranscript } = useConfig();
 
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
+  const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
 
   const leftSideShown = isEditor || showOriginalText;
   const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
@@ -118,6 +119,15 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       }
     }, 100);
   }, [translatedText]);
+
+  // Also scroll the transcript area
+  useEffect(() => {
+    setTimeout(() => {
+      if (transcriptContainerRef.current) {
+        transcriptContainerRef.current.scrollTop = transcriptContainerRef.current.scrollHeight;
+      }
+    }, 100);
+  }, [transcript]);
   
 
 
@@ -173,7 +183,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
         {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
-        <div className="flex-grow overflow-auto p-4 touch-pan-y">
+        <div className="flex-grow overflow-auto p-4 touch-pan-y" ref={transcriptContainerRef}>
         {showTranscript ?
           <div className="whitespace-pre-line">{transcript}</div> :
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
