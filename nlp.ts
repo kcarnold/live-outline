@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import * as Diff from 'diff';
 
 export class AnthropicProvider {
   anthropicClient: Anthropic;
@@ -57,8 +58,15 @@ Always give the complete translation, even if it's just a small change or there 
   return translatedText;
 }
 
-export const getTranslationEfficient = async (provider, text, prevTranslatedText, language, patch) => {
-  const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; translate the new text into ${language} and then update the translation by calling the \"update\" or \"replaceEntireText\" tools.
+export const getTranslationEfficient = async (provider, text, prevSourceText, prevTranslatedText, language) => {
+    // Get the diff between the previous source text and the new source text
+    let patch = Diff.createPatch("source_text.txt", prevSourceText, text, null, null, { context: 3 });
+    // remove "\ No newline at end of file"
+    patch = patch.replace(/\\ No newline at end of file\n/g, '');
+    // Remove the first 4 lines since they're just header
+    patch = patch.split('\n').slice(4).join('\n');
+
+    const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; translate the new text into ${language} and then update the translation by calling the \"update\" or \"replaceEntireText\" tools.
 
 Note: Long tool calls cost us more money. So:
 - When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.

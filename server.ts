@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { AssemblyAI } from "assemblyai";
 import { DocumentManager } from '@y-sweet/sdk'
-import * as Diff from 'diff';
 
 import { getTranslation, getTranslationEfficient, AnthropicProvider } from './nlp.ts';
 
@@ -70,24 +69,17 @@ function withTrailingNewline(text) {
 
 app.post('/api/requestTranslation', async (req, res) => {
   const text = withTrailingNewline(req.body?.text ?? "");
-  const prevText = withTrailingNewline(req.body?.prevText ?? "");
+  const prevSourceText = withTrailingNewline(req.body?.prevText ?? "");
   const prevTranslatedText = req.body?.prevTranslatedText ?? "";
   const language = req.body?.language ?? "";
   const efficientMode = req.body?.efficientMode ?? false;
-  console.log('Request translation:', text, prevText, prevTranslatedText, language, efficientMode);
+  console.log('Request translation:', text, prevSourceText, prevTranslatedText, language, efficientMode);
 
   let result = {};
   let translatedText = "";
   try {
     if (efficientMode) {
-      // Compute diff between text and prevText
-      let patch = Diff.createPatch("source_text.txt", prevText, text, null, null, { context: 3 });
-      // remove "\ No newline at end of file"
-      patch = patch.replace(/\\ No newline at end of file\n/g, '');
-      // Remove the first 4 lines since they're just header
-      patch = patch.split('\n').slice(4).join('\n');
-      console.log('Patch:', patch);
-      translatedText = await getTranslationEfficient(anthropicProvider, text, prevTranslatedText, language, patch);
+      translatedText = await getTranslationEfficient(anthropicProvider, text, prevSourceText, prevTranslatedText, language);
     } else
       translatedText = await getTranslation(anthropicProvider, text, prevTranslatedText, language);
     result = { ok: true, translatedText, text: text };
