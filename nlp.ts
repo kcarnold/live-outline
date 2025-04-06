@@ -146,18 +146,21 @@ Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${pat
     model: provider.defaultModel,
     max_tokens: provider.maxTokens,
     temperature: 0.1,
+    tools: tools,
     messages: [
       {
         "role": "user",
         "content": [
           {
             "type": "text",
-            "text": prompt
+            "text": prompt,
+            "cache_control": {
+              "type": "ephemeral"
+            }
           }
-        ]
-      }
+        ],
+      },
     ],
-    tools: tools,
     //betas: ["token-efficient-tools-2025-02-19"]
   });
 
