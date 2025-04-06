@@ -117,7 +117,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   // Also scroll the transcript area
   useEffect(() => {
     setTimeout(() => {
-      if (transcriptContainerRef.current) {
+      if (showTranscript && transcriptContainerRef.current) {
         transcriptContainerRef.current.scrollTop = transcriptContainerRef.current.scrollHeight;
       }
     }, 100);
