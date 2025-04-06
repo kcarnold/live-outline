@@ -7,7 +7,7 @@ export class AnthropicProvider {
   maxTokens: number;
   
 
-  constructor({ apiKey, defaultModel, maxTokens }) {
+  constructor({ apiKey, defaultModel, maxTokens }: { apiKey: string, defaultModel: string, maxTokens: number }) {
     this.anthropicClient = new Anthropic({
       apiKey: apiKey
     });
@@ -16,7 +16,7 @@ export class AnthropicProvider {
   }
 }
 
-export const getTranslation = async (provider, text, prevTranslatedText, language) => {
+export const getTranslation = async (provider: AnthropicProvider, text: string, prevTranslatedText: string, language: string) => {
   const message = await provider.anthropicClient.messages.create({
     max_tokens: provider.maxTokens,
     model: provider.defaultModel,
