@@ -65,7 +65,7 @@ export const getTranslationEfficient = async (provider, text, prevSourceText, pr
     // remove "\ No newline at end of file"
     patch = patch.replace(/\\ No newline at end of file\n/g, '');
     // Remove the first 4 lines since they're just header
-    patch = patch.split('\n').slice(4).join('\n');
+    //patch = patch.split('\n').slice(4).join('\n');
 
     const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; translate the new text into ${language} and then update the translation by calling the \"update\" or \"replaceEntireText\" tools.
 
