@@ -29,13 +29,16 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
     const texts = {};
     realtimeTranscriber.current.on('transcript', transcript => {
       let msg = '';
+      if (transcript.text === '') {
+        return;
+      }
+      console.log(transcript)
       texts[transcript.audio_start] = transcript.text;
       const keys = Object.keys(texts);
       keys.sort((a, b) => a - b);
       for (const key of keys) {
         if (texts[key]) {
           msg += `\n${texts[key]}`
-          console.log(msg)
         }
       }
       setTranscript(msg)
@@ -56,28 +59,31 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
 
     await realtimeTranscriber.current.connect();
 
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then((stream) => {
-        recorder.current = new RecordRTC(stream, {
-          type: 'audio',
-          mimeType: 'audio/webm;codecs=pcm',
-          recorderType: RecordRTC.StereoAudioRecorder,
-          timeSlice: 250,
-          desiredSampRate: 16000,
-          numberOfAudioChannels: 1,
-          bufferSize: 4096,
-          audioBitsPerSecond: 128000,
-          ondataavailable: async (blob) => {
-            if(!realtimeTranscriber.current) return;
-            const buffer = await blob.arrayBuffer();
-            realtimeTranscriber.current.sendAudio(buffer);
-          },
-        });
-        recorder.current.startRecording();
-      })
-      .catch((err) => console.error(err));
-
-    setIsRecording(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder.current = new RecordRTC(stream, {
+        type: 'audio',
+        mimeType: 'audio/webm;codecs=pcm',
+        recorderType: RecordRTC.StereoAudioRecorder,
+        timeSlice: 250,
+        desiredSampRate: 16000,
+        numberOfAudioChannels: 1,
+        bufferSize: 4096,
+        audioBitsPerSecond: 128000,
+        ondataavailable: async (blob) => {
+          if(!realtimeTranscriber.current) return;
+          const buffer = await blob.arrayBuffer();
+          realtimeTranscriber.current.sendAudio(buffer);
+        },
+      });
+      recorder.current.startRecording();
+      setIsRecording(true);
+    } catch (error) {
+      console.error(error);
+      if (realtimeTranscriber.current)
+        realtimeTranscriber.current.close();
+      realtimeTranscriber.current = null;
+    }
   }
 
   const endTranscription = async (event) => {
