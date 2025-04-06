@@ -43,7 +43,8 @@ Always give the complete translation, even if it's just a small change or there 
 
 
   // Extract the translated text from Claude's response
-  const fullResponse = message.content[0].text;
+  const contentBlock = message.content[0];
+  const fullResponse = contentBlock.type === 'text' ? contentBlock.text : '';
   console.log('Full response:', fullResponse);
   let translatedText = "";
 
