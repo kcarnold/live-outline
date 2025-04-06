@@ -161,8 +161,10 @@ Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${pat
     //betas: ["token-efficient-tools-2025-02-19"]
   });
 
+  console.dir(msg, { depth: null });
   // Extract the tool call
   if (msg.stop_reason !== 'tool_use') {
+    console.error("Expected tool_use stop reason, but got:", msg.stop_reason);
     throw new Error('Expected tool_use stop reason');
   }
   // The tools assumed that prevTranslatedText ended with a newline, so we add one here if it doesn't
@@ -170,7 +172,6 @@ Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${pat
     prevTranslatedText += '\n';
   }
 
-  console.dir(msg, { depth: null });
   let newTranslatedText = prevTranslatedText
   for (const content of msg.content) {
     if (content.type === 'tool_use') {
