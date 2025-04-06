@@ -133,20 +133,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     if (isTranslating) return;
     
     setIsTranslating(true);
-    try {
-      const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, { efficientMode: true });
-      setTranslatedText(response.translatedText);
-      setLastTranslatedText(response.text);
-    } catch {
-      console.warn('Efficient mode failed, falling back to non-efficient mode');
-      try {
-        const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, { efficientMode: false });
-        setTranslatedText(response.translatedText);
-        setLastTranslatedText(response.text);
-      } catch (e) {
-        console.error('Translation failed:', e);
-      } 
-    }
+    const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, {});
+    setTranslatedText(response.translatedText);
+    setLastTranslatedText(response.text);
     setIsTranslating(false);
   };
 
