@@ -69,6 +69,7 @@ export const getTranslationEfficient = async (provider, text, prevSourceText, pr
 
     const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; translate the new text into ${language} and then update the translation by calling the \"update\" or \"replaceEntireText\" tools.
 
+- When using \"update\", make sure that both the old_str and the new_str are in ${language} and that old_str is present verbatim in the existing translation
 - When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.
 - Only call \"replaceEntireText\" as a last resort, if the amount of incorrect text is large.
 - Always call a tool. Make all tool calls at once in parallel; don't wait for a response before making the next call.
