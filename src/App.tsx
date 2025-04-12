@@ -52,6 +52,13 @@ type TranslationResponse = {
   text: string
 };
 
+// Store previous translation state for reverting
+type TranslationState = {
+  text: string;
+  translatedText: string;
+  lastTranslatedText: string;
+};
+
 async function getUpdatedTranslation(text: string, prevText: string, translatedText: string, language: string, options: {}): Promise<TranslationResponse> {
   const response = await fetch('/api/requestTranslation', {
     method: 'POST',
@@ -104,6 +111,10 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [translationError, setTranslationError] = useState("");
   const { showOriginalText, fontSize, showTranscript } = useConfig();
+  
+  // Add state for previous translation state
+  const [prevTranslationState, setPrevTranslationState] = useState<TranslationState | null>(null);
+  const [canRevert, setCanRevert] = useState(false);
 
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
@@ -137,6 +148,13 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     }
     if (isTranslating) return;
     
+    // Store the current state before translation
+    setPrevTranslationState({
+      text: text,
+      translatedText: translatedText,
+      lastTranslatedText: lastTranslatedText
+    });
+    
     setIsTranslating(true);
     setTranslationError(""); // Clear any previous errors
     
@@ -144,11 +162,23 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, {});
       setTranslatedText(response.translatedText);
       setLastTranslatedText(response.text);
+      setCanRevert(true); // Enable revert button after successful translation
     } catch (error) {
       console.error('Translation error:', error);
       setTranslationError(error instanceof Error ? error.message : 'Unknown translation error occurred');
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  // Function to revert to previous translation state
+  const revertTranslation = () => {
+    if (prevTranslationState) {
+      setText(prevTranslationState.text);
+      setTranslatedText(prevTranslationState.translatedText);
+      setLastTranslatedText(prevTranslationState.lastTranslatedText);
+      setTranslationError(""); // Clear any errors
+      setCanRevert(false); // Disable revert button after use
     }
   };
 
@@ -204,10 +234,20 @@ function AppInner({isEditor}: {isEditor: boolean}) {
               setTranslatedText("");
               setLastTranslatedText("");
               setTranslationError("");
+              setCanRevert(false);
             }}
           >
             Reset
           </button>
+          {/* Revert Translation Button */}
+          {canRevert && (
+            <button 
+              className="bg-yellow-600 text-white font-medium py-2 px-4 rounded hover:bg-yellow-700 transition-colors mr-2"
+              onClick={revertTranslation}
+            >
+              Revert
+            </button>
+          )}
           <button 
             className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             onClick={doTranslation}
