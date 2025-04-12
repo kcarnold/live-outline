@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:server": "node server.ts",
-    "test": "vitest"
+    "test": "vitest",
+    "test:e2e": "node scripts/run-e2e-tests.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
