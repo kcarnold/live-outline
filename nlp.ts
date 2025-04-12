@@ -59,7 +59,7 @@ Always give the complete translation, even if it's just a small change or there 
   return translatedText;
 }
 
-export const getTranslationEfficient = async (provider, text, prevSourceText, prevTranslatedText, language) => {
+export const getTranslationEfficient = async (provider: AnthropicProvider, text: string, prevSourceText: string, prevTranslatedText: string, language: string) => {
     // Get the diff between the previous source text and the new source text
     let patch = Diff.createPatch("source_text.txt", prevSourceText, text, null, null, { context: 3 });
     // remove "\ No newline at end of file"
