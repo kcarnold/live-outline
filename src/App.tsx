@@ -67,11 +67,16 @@ async function getUpdatedTranslation(text: string, prevText: string, translatedT
     }),
   });
 
+  const result = await response.json().catch(() => null);
+
   if (!response.ok) {
+    // If we have a JSON result with error details, include them in the error message
+    if (result && result.error) {
+      throw new Error(`Translation error (${response.status}): ${result.error}`);
+    }
     throw new Error(`HTTP error! Status: ${response.status}`);
   }
 
-  const result = await response.json();
   if (!result.ok) {
     throw new Error(`Translation failed: ${result.error}`);
   }
@@ -97,6 +102,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   };
   const [isTranslating, setIsTranslating] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [translationError, setTranslationError] = useState("");
   const { showOriginalText, fontSize, showTranscript } = useConfig();
 
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
@@ -124,7 +130,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   }, [transcript]);
   
 
-
   const doTranslation = async () => {
     if (!text || !language) {
       console.warn('Text or language not set, skipping translation');
@@ -133,10 +138,18 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     if (isTranslating) return;
     
     setIsTranslating(true);
-    const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, {});
-    setTranslatedText(response.translatedText);
-    setLastTranslatedText(response.text);
-    setIsTranslating(false);
+    setTranslationError(""); // Clear any previous errors
+    
+    try {
+      const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, {});
+      setTranslatedText(response.translatedText);
+      setLastTranslatedText(response.text);
+    } catch (error) {
+      console.error('Translation error:', error);
+      setTranslationError(error instanceof Error ? error.message : 'Unknown translation error occurred');
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   return (
@@ -190,6 +203,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             onClick={() => {
               setTranslatedText("");
               setLastTranslatedText("");
+              setTranslationError("");
             }}
           >
             Reset
@@ -204,9 +218,16 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         </div> }
       </div>}
       <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
-        <Remark>
-          {translatedText}
-        </Remark>
+        {translationError ? (
+          <div className="p-4 mb-4 bg-red-800 text-white rounded-md">
+            <p className="font-bold">Translation Error:</p>
+            <p>{translationError}</p>
+          </div>
+        ) : (
+          <Remark>
+            {translatedText}
+          </Remark>
+        )}
       </div>
     </div>
   );
