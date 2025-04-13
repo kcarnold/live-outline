@@ -211,7 +211,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
         <div className="flex-grow overflow-auto p-4 touch-pan-y" ref={transcriptContainerRef}>
         {showTranscript ?
-          <div className="whitespace-pre-line">{transcript}</div> :
+          <div>{transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}</div> :
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         }
         </div>
