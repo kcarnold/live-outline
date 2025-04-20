@@ -272,7 +272,52 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     console.log('Translated text:', translatedText);
     setTranslatedText(translatedText);
     setIsTranslating(false);
-  };
+  }
+
+  const leftContent = <>
+  {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
+  {showTranscript &&
+    <div className="flex-1/2 overflow-auto p-4 touch-pan-y" ref={transcriptContainerRef}>
+    {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
+    </div>
+  }
+  {showOriginalText && 
+    <div className="flex-1/2 overflow-auto p-4">
+      <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
+    </div>
+  }
+  {isEditor && <div className="flex justify-end p-4 bg-white border-t">
+    {/* Language selector */}
+    <select 
+      className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
+      value={language}
+      onChange={(e) => {
+        setLanguage(e.target.value);
+      }}
+    >
+      <option value="Spanish">Spanish</option>
+      <option value="French">French</option>
+      <option value="Haitian Creole">Haitian Creole</option>
+    </select>
+    <button 
+      className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
+      onClick={() => {
+        setTranslatedText("");
+        translationCache.clear();
+        setTranslationError("");
+      }}
+    >
+      Reset
+    </button>
+    <button 
+      className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+      onClick={doTranslation}
+      disabled={isTranslating}
+    >
+      {isTranslating ? 'Translating...' : 'Translate'}
+    </button>
+  </div> }
+  </>;
 
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
@@ -300,43 +345,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
-        {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
-        <div className="flex-grow overflow-auto p-4 touch-pan-y" ref={transcriptContainerRef}>
-        {showTranscript ?
-          <div>{transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}</div> :
-          <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
-        }
-        </div>
-        {isEditor && <div className="flex justify-end p-4 bg-white border-t">
-          {/* Language selector */}
-          <select 
-            className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
-            value={language}
-            onChange={(e) => {
-              setLanguage(e.target.value);
-            }}
-          >
-            <option value="Spanish">Spanish</option>
-            <option value="French">French</option>
-            <option value="Haitian Creole">Haitian Creole</option>
-          </select>
-          <button 
-            className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
-            onClick={() => {
-              setTranslatedText("");
-              setTranslationError("");
-            }}
-          >
-            Reset
-          </button>
-          <button 
-            className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-            onClick={doTranslation}
-            disabled={isTranslating}
-          >
-            {isTranslating ? 'Translating...' : 'Translate'}
-          </button>
-        </div> }
+        {leftContent}
       </div>}
       <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
         {translationError ? (
