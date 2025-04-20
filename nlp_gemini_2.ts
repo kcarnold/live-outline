@@ -1,5 +1,4 @@
 import genAI from '@google/genai'; 
-import * as Diff from 'diff';
 
 export class GeminiProvider {
   apiClient: genAI.GoogleGenAI;
