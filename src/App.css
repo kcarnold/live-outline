@@ -42,3 +42,9 @@
   }
   ul p { margin: initial; }
 }
+
+@layer components {
+  .ProseMirror {
+    @apply border border-gray-300 bg-white;
+  }
+}
