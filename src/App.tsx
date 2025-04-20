@@ -56,54 +56,6 @@ function portWhitespace(src: string, dest: string) {
 }
 
 
-type TranslationResponse = {
-  ok: boolean,
-  translatedText: string,
-  text: string
-};
-
-// Store previous translation state for reverting
-type TranslationState = {
-  text: string;
-  translatedText: string;
-  lastTranslatedText: string;
-};
-
-async function getUpdatedTranslation(text: string, prevText: string, translatedText: string, language: string, options: {}): Promise<TranslationResponse> {
-  const response = await fetch('/api/requestTranslation', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      text: text,
-      prevText: prevText,
-      prevTranslatedText: translatedText,
-      language,
-      efficientMode: true,
-    }),
-  });
-
-  const result = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    // If we have a JSON result with error details, include them in the error message
-    if (result && result.error) {
-      throw new Error(`Translation error (${response.status}): ${result.error}`);
-    }
-    throw new Error(`HTTP error! Status: ${response.status}`);
-  }
-
-  if (!result.ok) {
-    throw new Error(`Translation failed: ${result.error}`);
-  }
-  return {
-    ok: true,
-    translatedText: result.translatedText,
-    text: result.text
-  };
-}
-
 function findContiguousBlocks(arr: any[]) {
   const blocks = [];
   let start = -1;
@@ -133,7 +85,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [text, setText] = useState("");
   const [transcript, setTranscript] = useAsPlainText("transcript");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
-  const [lastTranslatedText, setLastTranslatedText] = useAsPlainText("lastTranslatedText");
   const sharedMeta = useMap("meta");
   const language = sharedMeta.get("language") as string || "Spanish";
   const setLanguage = (newLanguage: string) => {
@@ -145,10 +96,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [translationError, setTranslationError] = useState("");
   const { showOriginalText, fontSize, showTranscript } = useConfig();
   
-  // Add state for previous translation state
-  const [prevTranslationState, setPrevTranslationState] = useState<TranslationState | null>(null);
-  const [canRevert, setCanRevert] = useState(false);
-
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -327,17 +274,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     setIsTranslating(false);
   };
 
-  // Function to revert to previous translation state
-  const revertTranslation = () => {
-    if (prevTranslationState) {
-      setText(prevTranslationState.text);
-      setTranslatedText(prevTranslationState.translatedText);
-      setLastTranslatedText(prevTranslationState.lastTranslatedText);
-      setTranslationError(""); // Clear any errors
-      setCanRevert(false); // Disable revert button after use
-    }
-  };
-
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
@@ -388,22 +324,11 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
             onClick={() => {
               setTranslatedText("");
-              setLastTranslatedText("");
               setTranslationError("");
-              setCanRevert(false);
             }}
           >
             Reset
           </button>
-          {/* Revert Translation Button */}
-          {canRevert && (
-            <button 
-              className="bg-yellow-600 text-white font-medium py-2 px-4 rounded hover:bg-yellow-700 transition-colors mr-2"
-              onClick={revertTranslation}
-            >
-              Revert
-            </button>
-          )}
           <button 
             className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             onClick={doTranslation}
