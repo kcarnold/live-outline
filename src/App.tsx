@@ -307,7 +307,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
           <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
         }
         </div>
-        {isEditor && <div className="flex justify-end p-4 bg-white border-t sticky bottom-0">
+        {isEditor && <div className="flex justify-end p-4 bg-white border-t">
           {/* Language selector */}
           <select 
             className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
