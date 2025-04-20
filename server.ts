@@ -7,6 +7,8 @@ import { AssemblyAI } from "assemblyai";
 import { DocumentManager } from '@y-sweet/sdk'
 
 import { getTranslation, getTranslationEfficient, AnthropicProvider } from './nlp.ts';
+import { translateBlock, GeminiProvider } from './nlp_gemini_2.ts';
+import type { TranslationTodo } from './nlp_gemini_2.ts';
 
 // Get API keys from environment variables, crash if not set
 function getEnvOrCrash(name: string): string {
@@ -20,6 +22,12 @@ function getEnvOrCrash(name: string): string {
 const anthropicProvider = new AnthropicProvider({
   apiKey: getEnvOrCrash('ANTHROPIC_API_KEY'),
   defaultModel: "claude-3-5-haiku-20241022",
+  maxTokens: 8192,
+});
+
+const geminiProvider = new GeminiProvider({
+  apiKey: getEnvOrCrash('GEMINI_API_KEY'),
+  defaultModel: "gemini-2.0-flash-lite",
   maxTokens: 8192,
 });
 
@@ -66,6 +74,28 @@ app.post('/api/ys-auth', async (req, res) => {
 function withTrailingNewline(text) {
   return text.endsWith('\n') ? text : text + '\n';
 }
+
+
+
+app.post('/api/requestTranslatedBlocks', async (req, res) => {
+  console.log('Request translated blocks:', req.body);
+  const translationTodos = (req.body?.translationTodos as [TranslationTodo]) ?? [];
+  const languages = req.body?.languages ?? [];
+
+  
+
+  const promises = translationTodos.map(async (todo) => {
+    return await translateBlock(geminiProvider, todo, languages[0]);
+  });
+
+  const results = await Promise.all(promises);
+  return res.json({
+    ok: true,
+    results
+  });
+});
+
+
 
 app.post('/api/requestTranslation', async (req, res) => {
   const text = withTrailingNewline(req.body?.text ?? "");

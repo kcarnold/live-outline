@@ -46,6 +46,16 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
   });
 }
 
+function portWhitespace(src: string, dest: string) {
+  if (dest.trim() !== dest) {
+    console.warn('Destination text has leading or trailing whitespace:', dest);
+  }
+  const whitespaceBefore = src.length - src.trimStart().length;
+  const whitespaceAfter = src.length - src.trimEnd().length;
+  return src.slice(0, whitespaceBefore) + dest + src.slice(src.length - whitespaceAfter);
+}
+
+
 type TranslationResponse = {
   ok: boolean,
   translatedText: string,
@@ -94,6 +104,28 @@ async function getUpdatedTranslation(text: string, prevText: string, translatedT
   };
 }
 
+function findContiguousBlocks(arr: any[]) {
+  const blocks = [];
+  let start = -1;
+  
+  for (let i = 0; i < arr.length; i++) {
+    // If we find a truthy value and we're not already in a block, mark the start
+    if (arr[i] && start === -1) {
+      start = i;
+    }
+    
+    // If we find a falsy value and we were in a block, or we're at the end of the array and in a block
+    if ((!arr[i] || i === arr.length - 1) && start !== -1) {
+      // If we're at the end of the array and the last element is truthy, we need to include it
+      const end = arr[i] ? i : i - 1;
+      blocks.push([start, end]);
+      start = -1; // Reset start to indicate we're not in a block
+    }
+  }
+  
+  return blocks;
+}
+
 
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
@@ -107,6 +139,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const setLanguage = (newLanguage: string) => {
     sharedMeta.set("language", newLanguage);
   };
+  const translationCache = useMap("translationCache");
   const [isTranslating, setIsTranslating] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [translationError, setTranslationError] = useState("");
@@ -142,33 +175,156 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   
 
   const doTranslation = async () => {
-    if (!text || !language) {
-      console.warn('Text or language not set, skipping translation');
-      return;
+    // Split the input into chunks (for first pass, just do by line)
+    let chunks = text.split('\n');
+    console.log('Chunks:', chunks);
+
+    // Whitespace is annoying, so consolidate any whitespace-only chunk into the previous chunk.
+    chunks = chunks.reduce((acc: string[], chunk: string) => {
+      if (acc.length === 0) {
+        // First chunk, just add it
+        acc.push(chunk);
+        return acc;
+      }
+      if (chunk.trim() === '') {
+        acc[acc.length - 1] += '\n' + chunk;
+      }
+      else {
+        // It's possible that the first chunk was whitespace-only.
+        // In that case, we need to add it to the previous chunk.
+        if (acc[acc.length - 1].trim() === '') {
+          acc[acc.length - 1] += '\n' + chunk;
+        } else {
+          // Otherwise, just add it as a new chunk
+          acc.push(chunk);
+        }
+      }
+      return acc;
+    }, []);
+
+    console.log('Consolidated chunks:', chunks);
+
+    // Assert that all chunks are non-empty
+    for (const chunk of chunks) {
+      if (chunk.trim() === '') {
+        console.error('Empty chunk found:', chunk);
+      }
     }
-    if (isTranslating) return;
+
+    // Make an array where each entry is:
+    // 0: don't include
+    // 1: need to translate
+    // 2: included only for context
     
-    // Store the current state before translation
-    setPrevTranslationState({
-      text: text,
-      translatedText: translatedText,
-      lastTranslatedText: lastTranslatedText
+    // The keys of the translation cache are always the trimmed chunks.
+    const chunkStatus = chunks.map((chunk) => {
+      return translationCache.has(chunk.trim()) ? 0 : 1;
     });
-    
-    setIsTranslating(true);
-    setTranslationError(""); // Clear any previous errors
-    
-    try {
-      const response = await getUpdatedTranslation(text, lastTranslatedText, translatedText, language, {});
-      setTranslatedText(response.translatedText);
-      setLastTranslatedText(response.text);
-      setCanRevert(true); // Enable revert button after successful translation
-    } catch (error) {
-      console.error('Translation error:', error);
-      setTranslationError(error instanceof Error ? error.message : 'Unknown translation error occurred');
-    } finally {
-      setIsTranslating(false);
+
+    // Mark a few lines before each "need to translate" chunk as "context"
+    for (let i = 0; i < chunkStatus.length; i++) {
+      if (chunkStatus[i] === 1) {
+        // Mark the previous few lines as context
+        for (let j = 1; j <= 3; j++) {
+          if (i - j >= 0 && chunkStatus[i - j] === 0) {
+            // @ts-ignore
+            chunkStatus[i - j] = 2;
+          }
+        }
+      }
     }
+
+    // Create contiguous blocks of text to translate
+    const translationTodoBlocks = findContiguousBlocks(chunkStatus);
+    console.log('Translation todo blocks:', translationTodoBlocks);
+
+    // Now make a to-do list for all translations to request. Translations will get requested in blocks, where
+    // each block is a contiguous range of chunks that need to be translated.
+
+    type TranslationTodo = {
+      chunks: string[];
+      offset: number;
+      isTranslationNeeded: boolean[];
+      translatedContext: string;
+    }
+
+    const translationTodos: TranslationTodo[] = [];
+    for (const block of translationTodoBlocks) {
+      const [start, end] = block;
+      const chunksInContext = chunks.slice(start, end + 1);
+      const statusesInContext = chunkStatus.slice(start, end + 1);
+      const translatedContext = chunksInContext.map((chunk) => {
+        const cachedTranslation = translationCache.get(chunk.trim()) as string | undefined;
+        if (cachedTranslation) {
+          return portWhitespace(chunk, cachedTranslation);
+        }
+        return '';
+      }).join('\n');
+      const isTranslationNeeded = statusesInContext.map(x => x === 1);
+      translationTodos.push({
+        chunks: chunksInContext,
+        offset: start,
+        isTranslationNeeded,
+        translatedContext,
+      });
+    }
+    console.log('Translation todos:', translationTodos);
+
+    if (translationTodos.length > 0) {
+      setIsTranslating(true);
+      setTranslationError("");
+      const response = await fetch('/api/requestTranslatedBlocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          translationTodos,
+          languages: [language],
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result.ok) {
+        // If we have a JSON result with error details, include them in the error message
+        if (result && result.error) {
+          setTranslationError(`Translation error (${response.status}): ${result.error}`);
+        } else {
+          setTranslationError(`HTTP error! Status: ${response.status}`);
+        }
+        setIsTranslating(false);
+        return;
+      }
+
+      // For each block, the server gave us a list of updated chunks, which we can use to update the translation cache.
+      const translationResults = result.results as { sourceText: string, translatedText: string }[][];
+      console.log('Translation results:', translationResults);
+      for (const block of translationResults) {
+        for (const result of block) {
+          const { sourceText, translatedText } = result;
+          const trimmedSourceText = sourceText.trim();
+          const trimmedTranslatedText = translatedText.trim();
+          translationCache.set(trimmedSourceText, trimmedTranslatedText);
+        }
+      }
+    }
+    
+    // Finally, reconstruct the translated text.
+    const translatedText = chunks.map((chunk) => {
+      const cachedTranslation = translationCache.get(chunk.trim()) as string | undefined;
+      if (cachedTranslation) {
+        const result = portWhitespace(chunk, cachedTranslation);
+        console.log('Cached translation for chunk:', [chunk, cachedTranslation, result]);
+        return result;
+      } else {
+        console.warn('No cached translation for chunk:', chunk);
+        return chunk;
+      }
+    }).join('\n');
+
+    console.log('Translated text:', translatedText);
+    setTranslatedText(translatedText);
+    setIsTranslating(false);
   };
 
   // Function to revert to previous translation state
