@@ -39,12 +39,12 @@ export const translateBlock = async (provider: GeminiProvider, todo: Translation
             type: genAI.Type.ARRAY,
             items: {
               type: genAI.Type.OBJECT,
-              required: ["num", "French"],
+              required: ["num", "translation"],
               properties: {
                 num: {
                   type: genAI.Type.INTEGER,
                 },
-                French: {
+                translation: {
                   type: genAI.Type.STRING,
                 },
               },
@@ -102,7 +102,7 @@ ${inputDocument}
     const lines = jsonResponse.lines;
     const translatedBlocks: TranslationBlockResult[] = lines.map((line: any) => {
         const lineNumber = line.num;
-        const translatedText = line.French;
+        const translatedText = line.translation;
         const sourceText = todo.chunks[lineNumber];
         return { sourceText, translatedText };
     });
