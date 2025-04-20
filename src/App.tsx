@@ -121,7 +121,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   }, [transcript]);
   
 
-  const doTranslation = async () => {
+  async function doTranslation() {
     // Split the input into chunks (for first pass, just do by line)
     let chunks = text.split('\n');
     console.log('Chunks:', chunks);
@@ -162,7 +162,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     // 0: don't include
     // 1: need to translate
     // 2: included only for context
-    
     // The keys of the translation cache are always the trimmed chunks.
     const chunkStatus = chunks.map((chunk) => {
       return translationCache.has(chunk.trim()) ? 0 : 1;
@@ -187,13 +186,12 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
     // Now make a to-do list for all translations to request. Translations will get requested in blocks, where
     // each block is a contiguous range of chunks that need to be translated.
-
     type TranslationTodo = {
       chunks: string[];
       offset: number;
       isTranslationNeeded: boolean[];
       translatedContext: string;
-    }
+    };
 
     const translationTodos: TranslationTodo[] = [];
     for (const block of translationTodoBlocks) {
@@ -244,7 +242,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       }
 
       // For each block, the server gave us a list of updated chunks, which we can use to update the translation cache.
-      const translationResults = result.results as { sourceText: string, translatedText: string }[][];
+      const translationResults = result.results as { sourceText: string; translatedText: string; }[][];
       console.log('Translation results:', translationResults);
       for (const block of translationResults) {
         for (const result of block) {
@@ -255,7 +253,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         }
       }
     }
-    
+
     // Finally, reconstruct the translated text.
     const translatedText = chunks.map((chunk) => {
       const cachedTranslation = translationCache.get(chunk.trim()) as string | undefined;
@@ -364,7 +362,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 }
 
 const App = () => {
-  const docId = "doc2";
+  const docId = "doc4";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const authEndpoint = async () => {
