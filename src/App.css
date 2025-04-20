@@ -5,6 +5,7 @@
     overscroll-behavior: none;
   }
 
+  /* Override some of tailwind's preflight styles */
   ul, ol {
     margin: initial;
     list-style-type: initial;
@@ -19,4 +20,25 @@
   ul li, ol li {
     margin: initial;
   }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: bold;
+  }
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: bold;
+  }
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: bold;
+  }
+  h4, h5, h6 {
+    font-weight: bold;
+  }
+
+  p {
+    margin: 0.5em 0;
+  }
+  ul p { margin: initial; }
 }
