@@ -109,9 +109,6 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
           <button className="bg-green-500 text-white font-medium py-1 px-2 rounded-md hover:bg-green-600" onClick={startTranscription}>Start recording</button>
         )}
       </div>
-      <div className="h-10 overflow-y-auto">
-        {transcript}
-      </div>
     </div>
   );
 }
