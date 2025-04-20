@@ -13,7 +13,6 @@
     "test:e2e": "node scripts/run-e2e-tests.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^0.9.0",
     "@handlewithcare/react-prosemirror": "^2.3.5",
     "@tailwindcss/vite": "^4.0.12",

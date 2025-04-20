@@ -6,9 +6,8 @@ import path from 'path';
 import { AssemblyAI } from "assemblyai";
 import { DocumentManager } from '@y-sweet/sdk'
 
-import { getTranslation, getTranslationEfficient, AnthropicProvider } from './nlp.ts';
-import { translateBlock, GeminiProvider } from './nlp_gemini_2.ts';
-import type { TranslationTodo } from './nlp_gemini_2.ts';
+import { translateBlock, GeminiProvider } from './nlp.ts';
+import type { TranslationTodo } from './nlp.ts';
 
 // Get API keys from environment variables, crash if not set
 function getEnvOrCrash(name: string): string {
@@ -18,12 +17,6 @@ function getEnvOrCrash(name: string): string {
   }
   return value;
 }
-
-const anthropicProvider = new AnthropicProvider({
-  apiKey: getEnvOrCrash('ANTHROPIC_API_KEY'),
-  defaultModel: "claude-3-5-haiku-20241022",
-  maxTokens: 8192,
-});
 
 const geminiProvider = new GeminiProvider({
   apiKey: getEnvOrCrash('GEMINI_API_KEY'),
@@ -71,18 +64,11 @@ app.post('/api/ys-auth', async (req, res) => {
   res.send(clientToken)
 })
 
-function withTrailingNewline(text) {
-  return text.endsWith('\n') ? text : text + '\n';
-}
-
-
 
 app.post('/api/requestTranslatedBlocks', async (req, res) => {
   console.log('Request translated blocks:', req.body);
   const translationTodos = (req.body?.translationTodos as [TranslationTodo]) ?? [];
   const languages = req.body?.languages ?? [];
-
-  
 
   const promises = translationTodos.map(async (todo) => {
     return await translateBlock(geminiProvider, todo, languages[0]);
@@ -95,31 +81,6 @@ app.post('/api/requestTranslatedBlocks', async (req, res) => {
   });
 });
 
-
-
-app.post('/api/requestTranslation', async (req, res) => {
-  const text = withTrailingNewline(req.body?.text ?? "");
-  const prevSourceText = withTrailingNewline(req.body?.prevText ?? "");
-  const prevTranslatedText = req.body?.prevTranslatedText ?? "";
-  const language = req.body?.language ?? "";
-  const efficientMode = req.body?.efficientMode ?? false;
-  console.log('Request translation:', text, prevSourceText, prevTranslatedText, language, efficientMode);
-
-  let result = {};
-  let translatedText = "";
-  try {
-    if (efficientMode) {
-      translatedText = await getTranslationEfficient(anthropicProvider, text, prevSourceText, prevTranslatedText, language);
-    } else
-      translatedText = await getTranslation(anthropicProvider, text, prevTranslatedText, language);
-    result = { ok: true, translatedText, text: text };
-  } catch (e) {
-    console.error('Error translating:', e);
-    result = { ok: false, error: e.message };
-    res.status(500);
-  }
-  res.json(result);
-});
 
 
 const PORT = process.env.PORT || 8000;

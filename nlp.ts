@@ -1,14 +1,13 @@
-import Anthropic from '@anthropic-ai/sdk';
-import * as Diff from 'diff';
+import genAI from '@google/genai'; 
 
-export class AnthropicProvider {
-  anthropicClient: Anthropic;
+export class GeminiProvider {
+  apiClient: genAI.GoogleGenAI;
   defaultModel: string;
   maxTokens: number;
   
 
   constructor({ apiKey, defaultModel, maxTokens }: { apiKey: string, defaultModel: string, maxTokens: number }) {
-    this.anthropicClient = new Anthropic({
+    this.apiClient = new genAI.GoogleGenAI({
       apiKey: apiKey
     });
     this.defaultModel = defaultModel;
@@ -16,223 +15,95 @@ export class AnthropicProvider {
   }
 }
 
-export const getTranslation = async (provider: AnthropicProvider, text: string, prevTranslatedText: string, language: string) => {
-  const message = await provider.anthropicClient.messages.create({
-    max_tokens: provider.maxTokens,
-    model: provider.defaultModel,
-    messages: [{ role: 'user', content: `We are translating text into ${language} as it comes in.
-
-So we need to update the translation we have so far to account for the new text.
-
-# old translated text
-${prevTranslatedText}
-
-# new text
-${text}
-
-Please respond in this format:
-
-<translation>
-The completed updated translation
-</translation>
-
-Always give the complete translation, even if it's just a small change or there is some uncertainty.
-` }],
-
-  });
-
-
-  // Extract the translated text from Claude's response
-  const contentBlock = message.content[0];
-  const fullResponse = contentBlock.type === 'text' ? contentBlock.text : '';
-  console.log('Full response:', fullResponse);
-  let translatedText = "";
-
-  // Parse the response to extract the translation between <translation> tags
-  const translationMatch = fullResponse.match(/<translation>([\s\S]*?)<\/translation>/);
-  if (translationMatch && translationMatch[1]) {
-    translatedText = translationMatch[1].trim();
-  } else {
-    console.error("Could not extract translation from response");
-    throw new Error("Could not extract translation from response");
-  }
-  return translatedText;
+export type TranslationTodo = {
+    chunks: string[];
+    offset: number;
+    isTranslationNeeded: boolean[];
+    translatedContext: string;
 }
 
-export const getTranslationEfficient = async (provider: AnthropicProvider, text: string, prevSourceText: string, prevTranslatedText: string, language: string) => {
-    // Get the diff between the previous source text and the new source text
-    let patch = Diff.createPatch("source_text.txt", prevSourceText, text, null, null, { context: 3 });
-    // remove "\ No newline at end of file"
-    patch = patch.replace(/\\ No newline at end of file\n/g, '');
-    // Remove the first 4 lines since they're just header
-    //patch = patch.split('\n').slice(4).join('\n');
+export type TranslationBlockResult = {
+    sourceText: string;
+    translatedText: string;
+}
 
-    const prompt = `We are translating text into ${language} as it comes in. We already have a translation, but we need to update it to account for new text. A diff representing the difference in source text is provided; translate the new text into ${language} and then update the translation by calling the \"update\" or \"replaceEntireText\" tools.
-
-- When using \"update\", make sure that both the old_str and the new_str are in ${language} and that old_str is present verbatim in the existing translation
-- When using \"update\", use the shortest possible string that uniquely identifies the text to be replaced.
-- Only call \"replaceEntireText\" as a last resort, if the amount of incorrect text is large.
-- Always call a tool. Make all tool calls at once in parallel; don't wait for a response before making the next call.
-- Maintain whitespace; you may need to insert whitespace at the beginning or end of a line.
-
-Existing translation (to update):\n\`\`\`\n${prevTranslatedText}\n\`\`\`
-
-Source text diff; update the translation to correspond to this:\n\n\`\`\`\n${patch}\n\`\`\`\n
-
-`;
-  console.log('Prompt:', prompt);
-
-  const tools = [
-    {
-      "name": "replaceEntireText",
-      "description": "Replace the entire text with a new translation",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "new_str": {
-            "type": "string",
-            "description": "The new translation"
-          }
-        },
-        "required": [
-          "new_str"
-        ]
-      }
-    },
-    // {
-    //   "name": "insert",
-    //   "description": "Insert text at a given line number",
-    //   "input_schema": {
-    //     "type": "object",
-    //     "properties": {
-    //       "line_num": {
-    //         "type": "integer",
-    //         "description": "Line number of insertion point (0 = insert at beginning, 1 = insert after first line, -1 = insert at end"
-    //       },
-    //       "new_str": {
-    //         "type": "string",
-    //         "description": "Text to insert (including newline if needed)"
-    //       }
-    //     },
-    //     "required": [
-    //       "line_num",
-    //       "new_str"
-    //     ]
-    //   }
-    // },
-    {
-      "name": "update",
-      "description": "Substitute one string for another",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "old_str": {
-            "type": "string",
+export const translateBlock = async (provider: GeminiProvider, todo: TranslationTodo, language: string): Promise<TranslationBlockResult[]> => {
+    const config = {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: genAI.Type.OBJECT,
+        required: ["lines"],
+        properties: {
+          lines: {
+            type: genAI.Type.ARRAY,
+            items: {
+              type: genAI.Type.OBJECT,
+              required: ["num", "translation"],
+              properties: {
+                num: {
+                  type: genAI.Type.INTEGER,
+                },
+                translation: {
+                  type: genAI.Type.STRING,
+                },
+              },
+            },
           },
-          "new_str": {
-            "type": "string",
-            "description": "Text to replace old_str with, including newline characters if needed"
-          }
         },
-        "required": [
-          "old_str",
-          "new_str"
-        ]
       },
-      "cache_control": {"type": "ephemeral"}
-    }
-  ];
-
-  const msg = await provider.anthropicClient.messages.create({
-    model: provider.defaultModel,
-    max_tokens: provider.maxTokens,
-    temperature: 0.1,
-    tools: tools,
-    messages: [
+    };
+    const model = 'gemini-2.0-flash-lite';
+    const inputDocument = todo.chunks.map((chunk, index) => {
+        const isTranslationNeeded = todo.isTranslationNeeded[index];
+        const lineNumber = index;
+        return `${lineNumber} ${isTranslationNeeded ? 'T' : 'C'} ${chunk.trim()}`;
+    }).join('\n');
+    console.log('Input document:', inputDocument);
+        
+    const contents = [
       {
-        "role": "user",
-        "content": [
+        role: 'user',
+        parts: [
           {
-            "type": "text",
-            "text": prompt,
-            "cache_control": {
-              "type": "ephemeral"
-            }
-          }
+            text: `
+We are translating text into ${language}.
+
+Here is some text that has already been translated, provided for reference for style and terminology.
+
+<already_translated>
+${todo.translatedContext}
+</already_translated>
+
+The input document will be in the form:
+NUMBER C_OR_T TEXT
+
+Where C_OR_T is either C (for context) or T (for translation).
+
+For each line marked with T, translate the text into the target language.
+
+<input_document>
+${inputDocument}
+</input_document>
+  `,
+          },
         ],
       },
-    ],
-  });
-
-  console.dir(msg, { depth: null });
-  // Extract the tool call
-  if (msg.stop_reason !== 'tool_use') {
-    console.error("Expected tool_use stop reason, but got:", msg.stop_reason);
-    throw new Error('Expected tool_use stop reason');
-  }
-  // The tools assumed that prevTranslatedText ended with a newline, so we add one here if it doesn't
-  if (prevTranslatedText.length > 0 && prevTranslatedText[prevTranslatedText.length - 1] !== '\n') {
-    prevTranslatedText += '\n';
-  }
-
-  let newTranslatedText = prevTranslatedText
-  for (const content of msg.content) {
-    if (content.type === 'tool_use') {
-      newTranslatedText = applyTool(content, newTranslatedText);
-    }
-  }
-
-  return newTranslatedText;
-
-}
-
-function applyTool(tool, prevTranslatedText) {
-
-  if (tool.name === 'replaceEntireText') {
-    const newStr = tool.input.new_str;
-    console.log(`Replacing entire text.'`);
-    return newStr;
-  } else if (tool.name === 'insert') {
-    let lineNum = tool.input.line_num;
-    const newStr = tool.input.new_str;
-    console.log(`Inserting '${newStr}' at line ${lineNum}`);
-    // Find where to insert the new text
-    let insertionPoint = 0;
-    if (lineNum === 0) {
-      // insert at beginning
-      insertionPoint = 0;
-    } else if (lineNum === -1) {
-      // insert at end
-      insertionPoint = prevTranslatedText.length;
-    } else {
-      // insert after the specified line
-      const lines = prevTranslatedText.split('\n');
-      let lineIndex = 0;
-      while (lineIndex < lines.length && lineNum > 0) {
-        insertionPoint += lines[lineIndex].length + 1; // +1 for newline
-        lineIndex++;
-        lineNum--;
-      }
-    }
-    const newTranslatedText = prevTranslatedText.slice(0, insertionPoint) + newStr + prevTranslatedText.slice(insertionPoint);
-    return newTranslatedText;
-  } else if (tool.name === 'update') {
-    const oldStr = tool.input.old_str;
-    const newStr = tool.input.new_str;
-    if (oldStr === newStr) {
-      console.warn('Old and new strings are the same');
-      return prevTranslatedText;
-    }
-    console.log(`Updating '${oldStr}' to '${newStr}'`);
-    // Make sure the old string is in the text
-    if (!prevTranslatedText.includes(oldStr)) {
-      console.error(`Old string '${oldStr}' not found in text`);
-      throw new Error('Old string not found in text');
-    }
-    // Replace the *last* occurrence of the old string with the new string
-    const lastIndex = prevTranslatedText.lastIndexOf(oldStr);
-    const newTranslatedText = prevTranslatedText.slice(0, lastIndex) + newStr + prevTranslatedText.slice(lastIndex + oldStr.length);
-    return newTranslatedText;
-  }
-  throw new Error(`Unexpected tool name: ${tool.name}`);
-}
+    ];
+  
+    const response = await provider.apiClient.models.generateContent({
+      model: provider.defaultModel,
+      config,
+      contents,
+    });
+    console.dir(response, { depth: null });
+    console.log(response.usageMetadata);
+    const jsonResponse = JSON.parse(response.text || '');
+    const lines = jsonResponse.lines;
+    const translatedBlocks: TranslationBlockResult[] = lines.map((line: any) => {
+        const lineNumber = line.num;
+        const translatedText = line.translation;
+        const sourceText = todo.chunks[lineNumber];
+        return { sourceText, translatedText };
+    });
+    return translatedBlocks;
+}  
