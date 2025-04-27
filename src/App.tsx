@@ -132,7 +132,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   async function doTranslation() {
     // Split the input into chunks (for first pass, just do by line)
     let chunks = text.split('\n');
-    console.log('Chunks:', chunks);
 
     // Whitespace is annoying, so consolidate any whitespace-only chunk into the previous chunk.
     chunks = chunks.reduce((acc: string[], chunk: string) => {
@@ -157,8 +156,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       return acc;
     }, []);
 
-    console.log('Consolidated chunks:', chunks);
-
     // Assert that all chunks are non-empty
     for (const chunk of chunks) {
       if (chunk.trim() === '') {
@@ -169,7 +166,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     // Decompose chunks into formatting and content sections
       
     const decomposedChunks = chunks.map(decompose);
-    console.log('Decomposed chunks:', decomposedChunks);
 
     // Make an array where each entry is:
     // 0: don't include
@@ -195,7 +191,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
     // Create contiguous blocks of text to translate
     const translationTodoBlocks = findContiguousBlocks(chunkStatus);
-    console.log('Translation todo blocks:', translationTodoBlocks);
 
     // Now make a to-do list for all translations to request. Translations will get requested in blocks, where
     // each block is a contiguous range of chunks that need to be translated.
@@ -226,7 +221,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         translatedContext,
       });
     }
-    console.log('Translation todos:', translationTodos);
 
     if (translationTodos.length > 0) {
       setIsTranslating(true);
@@ -256,7 +250,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
       // For each block, the server gave us a list of updated chunks, which we can use to update the translation cache.
       const translationResults = result.results as { sourceText: string; translatedText: string; }[][];
-      console.log('Translation results:', translationResults);
       for (const block of translationResults) {
         for (const result of block) {
           const { sourceText, translatedText } = result;
@@ -281,7 +274,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
       if (cachedTranslation) {
         const result = chunk.format + cachedTranslation + chunk.trailingWhitespace;
-        console.log('Cached translation for chunk:', [chunk, cachedTranslation, result]);
         return result;
       } else {
         console.warn('No cached translation for chunk:', chunk);
