@@ -80,7 +80,6 @@ function decompose(chunk: string) {
     return {format: splits[1], content: splits[2], trailingWhitespace};
   } else {
     console.warn('Failed to decompose chunk:', chunk);
-    debugger
     return {format: '', content: content, trailingWhitespace};
   }
 }
@@ -107,8 +106,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const leftSideShown = isEditor || showOriginalText;
-  const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
 
   useEffect(() => {
     // Needs a delay to ensure the scroll happens after the DOM has updated
@@ -284,6 +281,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     setTranslatedText(translatedText);
     setIsTranslating(false);
   }
+
+  const leftSideShown = isEditor || showOriginalText || showTranscript;
+  const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
 
   const leftContent = <>
   {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
