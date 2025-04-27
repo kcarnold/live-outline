@@ -1,37 +1,157 @@
 
 export function findContiguousBlocks(arr: any[]) {
-  const blocks = [];
-  let start = -1;
-  
-  for (let i = 0; i < arr.length; i++) {
-    // If we find a truthy value and we're not already in a block, mark the start
-    if (arr[i] && start === -1) {
-      start = i;
+    const blocks = [];
+    let start = -1;
+
+    for (let i = 0; i < arr.length; i++) {
+        // If we find a truthy value and we're not already in a block, mark the start
+        if (arr[i] && start === -1) {
+            start = i;
+        }
+
+        // If we find a falsy value and we were in a block, or we're at the end of the array and in a block
+        if ((!arr[i] || i === arr.length - 1) && start !== -1) {
+            // If we're at the end of the array and the last element is truthy, we need to include it
+            const end = arr[i] ? i : i - 1;
+            blocks.push([start, end]);
+            start = -1; // Reset start to indicate we're not in a block
+        }
     }
-    
-    // If we find a falsy value and we were in a block, or we're at the end of the array and in a block
-    if ((!arr[i] || i === arr.length - 1) && start !== -1) {
-      // If we're at the end of the array and the last element is truthy, we need to include it
-      const end = arr[i] ? i : i - 1;
-      blocks.push([start, end]);
-      start = -1; // Reset start to indicate we're not in a block
+
+    return blocks;
+}
+
+export type DecomposedChunk = {
+    format: string;
+    content: string;
+    trailingWhitespace: string;
+};
+
+export function decompose(chunk: string): DecomposedChunk {
+    const content = chunk.trimEnd();
+    const trailingWhitespace = chunk.slice(content.length);
+    // formatting content is: leading whitespace, -, *, or # / ## / ...
+    // content is: everything else
+    const splits = /^([\s\d\-\*\#\.]*)(.*)$/.exec(content);
+    if (splits) {
+        return { format: splits[1], content: splits[2], trailingWhitespace };
+    } else {
+        console.warn('Failed to decompose chunk:', chunk);
+        return { format: '', content: content, trailingWhitespace };
     }
-  }
-  
-  return blocks;
 }
 
 
-export function decompose(chunk: string) {
-  const content = chunk.trimEnd();
-  const trailingWhitespace = chunk.slice(content.length);
-  // formatting content is: leading whitespace, -, *, or # / ## / ...
-  // content is: everything else
-  const splits = /^([\s\d\-\*\#\.]*)(.*)$/.exec(content);
-  if (splits) {
-    return {format: splits[1], content: splits[2], trailingWhitespace};
-  } else {
-    console.warn('Failed to decompose chunk:', chunk);
-    return {format: '', content: content, trailingWhitespace};
-  }
+export type TranslationTodo = {
+    chunks: string[]; // the "content" part of the chunk; the formatting part is added back later
+    offset: number;
+    isTranslationNeeded: boolean[];
+    translatedContext: string;
+};
+
+
+export function getDecomposedChunks(text: string) {
+    // Split the input into chunks (for first pass, just do by line)
+    let chunks = text.split('\n');
+
+    // Whitespace is annoying, so consolidate any whitespace-only chunk into the previous chunk.
+    chunks = chunks.reduce((acc: string[], chunk: string) => {
+        if (acc.length === 0) {
+            // First chunk, just add it
+            acc.push(chunk);
+            return acc;
+        }
+        if (chunk.trim() === '') {
+            acc[acc.length - 1] += '\n' + chunk;
+        }
+        else {
+            // It's possible that the first chunk was whitespace-only.
+            // In that case, we need to add it to the previous chunk.
+            if (acc[acc.length - 1].trim() === '') {
+                acc[acc.length - 1] += '\n' + chunk;
+            } else {
+                // Otherwise, just add it as a new chunk
+                acc.push(chunk);
+            }
+        }
+        return acc;
+    }, []);
+
+    // Assert that all chunks are non-empty
+    for (const chunk of chunks) {
+        if (chunk.trim() === '') {
+            console.error('Empty chunk found:', chunk);
+        }
+    }
+
+    // Decompose chunks into formatting and content sections
+    const decomposedChunks = chunks.map(decompose);
+    return decomposedChunks;
+}
+
+// We need a type that is a map of string to string, but we don't want to use the built-in Map type
+// because it doesn't have a type signature that is compatible with the translation cache.
+export type TranslationCache = {
+    get(key: string): string | undefined;
+    set(key: string, value: string): void;
+    has(key: string): boolean;
+}
+
+export type GenericMap = {
+    get(key: string): any;
+    set(key: string, value: any): void;
+    has(key: string): boolean;
+}
+
+export function getTranslationTodos(decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
+    // Make an array where each entry is:
+    // 0: don't include
+    // 1: need to translate
+    // 2: included only for context
+    // The keys of the translation cache are always the trimmed chunks.
+    const chunkStatus = decomposedChunks.map((chunk) => {
+        return translationCache.has(chunk.content) ? 0 : 1;
+    });
+
+    // Mark a few lines before each "need to translate" chunk as "context"
+    for (let i = 0; i < chunkStatus.length; i++) {
+        if (chunkStatus[i] === 1) {
+            // Mark the previous few lines as context
+            for (let j = 1; j <= 3; j++) {
+                if (i - j >= 0 && chunkStatus[i - j] === 0) {
+                    // @ts-ignore
+                    chunkStatus[i - j] = 2;
+                }
+            }
+        }
+    }
+
+    // Create contiguous blocks of text to translate
+    const translationTodoBlocks = findContiguousBlocks(chunkStatus);
+
+    // Now make a to-do list for all translations to request. Translations will get requested in blocks, where
+    // each block is a contiguous range of chunks that need to be translated.
+
+    const translationTodos: TranslationTodo[] = [];
+    for (const block of translationTodoBlocks) {
+        const [start, end] = block;
+        const chunksInContext = decomposedChunks.slice(start, end + 1);
+        const statusesInContext = chunkStatus.slice(start, end + 1);
+        const translatedContext = chunksInContext.map((chunk) => {
+            const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
+            if (cachedTranslation) {
+                return chunk.format + cachedTranslation + chunk.trailingWhitespace;
+            }
+            return '';
+        }).join('\n');
+        const isTranslationNeeded = statusesInContext.map(x => x === 1);
+        translationTodos.push({
+            chunks: chunksInContext.map((chunk) => chunk.content),
+            offset: start,
+            isTranslationNeeded,
+            translatedContext,
+        });
+    }
+    return translationTodos;
+
 }
