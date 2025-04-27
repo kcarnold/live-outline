@@ -46,15 +46,6 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
   });
 }
 
-function portWhitespace(src: string, dest: string) {
-  if (dest.trim() !== dest) {
-    console.warn('Destination text has leading or trailing whitespace:', dest);
-  }
-  const whitespaceBefore = src.length - src.trimStart().length;
-  const whitespaceAfter = src.length - src.trimEnd().length;
-  return src.slice(0, whitespaceBefore) + dest + src.slice(src.length - whitespaceAfter);
-}
-
 
 function findContiguousBlocks(arr: any[]) {
   const blocks = [];
@@ -79,9 +70,26 @@ function findContiguousBlocks(arr: any[]) {
 }
 
 
+function decompose(chunk: string) {
+  const content = chunk.trimEnd();
+  const trailingWhitespace = chunk.slice(content.length);
+  // formatting content is: leading whitespace, -, *, or # / ## / ...
+  // content is: everything else
+  const splits = /^([\s\d\-\*\#\.]*)(.*)$/.exec(content);
+  if (splits) {
+    return {format: splits[1], content: splits[2], trailingWhitespace};
+  } else {
+    console.warn('Failed to decompose chunk:', chunk);
+    debugger
+    return {format: '', content: content, trailingWhitespace};
+  }
+}
+
+
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
+  window['ydoc'] = ydoc; // For debugging purposes
   const [text, setText] = useState("");
   const [transcript, setTranscript] = useAsPlainText("transcript");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
@@ -158,13 +166,18 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       }
     }
 
+    // Decompose chunks into formatting and content sections
+      
+    const decomposedChunks = chunks.map(decompose);
+    console.log('Decomposed chunks:', decomposedChunks);
+
     // Make an array where each entry is:
     // 0: don't include
     // 1: need to translate
     // 2: included only for context
     // The keys of the translation cache are always the trimmed chunks.
-    const chunkStatus = chunks.map((chunk) => {
-      return translationCache.has(chunk.trim()) ? 0 : 1;
+    const chunkStatus = decomposedChunks.map((chunk) => {
+      return translationCache.has(chunk.content) ? 0 : 1;
     });
 
     // Mark a few lines before each "need to translate" chunk as "context"
@@ -187,7 +200,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     // Now make a to-do list for all translations to request. Translations will get requested in blocks, where
     // each block is a contiguous range of chunks that need to be translated.
     type TranslationTodo = {
-      chunks: string[];
+      chunks: string[]; // the "content" part of the chunk; the formatting part is added back later
       offset: number;
       isTranslationNeeded: boolean[];
       translatedContext: string;
@@ -196,18 +209,18 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     const translationTodos: TranslationTodo[] = [];
     for (const block of translationTodoBlocks) {
       const [start, end] = block;
-      const chunksInContext = chunks.slice(start, end + 1);
+      const chunksInContext = decomposedChunks.slice(start, end + 1);
       const statusesInContext = chunkStatus.slice(start, end + 1);
       const translatedContext = chunksInContext.map((chunk) => {
-        const cachedTranslation = translationCache.get(chunk.trim()) as string | undefined;
+        const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
         if (cachedTranslation) {
-          return portWhitespace(chunk, cachedTranslation);
+          return chunk.format + cachedTranslation + chunk.trailingWhitespace;
         }
         return '';
       }).join('\n');
       const isTranslationNeeded = statusesInContext.map(x => x === 1);
       translationTodos.push({
-        chunks: chunksInContext,
+        chunks: chunksInContext.map((chunk) => chunk.content),
         offset: start,
         isTranslationNeeded,
         translatedContext,
@@ -247,18 +260,27 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       for (const block of translationResults) {
         for (const result of block) {
           const { sourceText, translatedText } = result;
+          // There shouldn't be anything to trim, but just in case, trim the source and translated text.
           const trimmedSourceText = sourceText.trim();
           const trimmedTranslatedText = translatedText.trim();
+          if (sourceText !== trimmedSourceText) {
+            console.warn('Source text was trimmed:', [sourceText, trimmedSourceText]);
+          }
+          if (translatedText !== trimmedTranslatedText) {
+            console.warn('Translated text was trimmed:', [translatedText, trimmedTranslatedText]);
+          }
+          // Update the translation cache with the new translation
           translationCache.set(trimmedSourceText, trimmedTranslatedText);
         }
       }
     }
 
     // Finally, reconstruct the translated text.
-    const translatedText = chunks.map((chunk) => {
-      const cachedTranslation = translationCache.get(chunk.trim()) as string | undefined;
+    const translatedText = decomposedChunks.map((chunk) => {
+
+      const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
       if (cachedTranslation) {
-        const result = portWhitespace(chunk, cachedTranslation);
+        const result = chunk.format + cachedTranslation + chunk.trailingWhitespace;
         console.log('Cached translation for chunk:', [chunk, cachedTranslation, result]);
         return result;
       } else {
@@ -267,7 +289,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       }
     }).join('\n');
 
-    console.log('Translated text:', translatedText);
     setTranslatedText(translatedText);
     setIsTranslating(false);
   }
