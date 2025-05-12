@@ -104,15 +104,14 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
     // Finally, reconstruct the translated text.
     const translatedText = decomposedChunks.map((chunk) => {
-
       const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
-      if (cachedTranslation) {
-        const result = chunk.format + cachedTranslation + chunk.trailingWhitespace;
-        return result;
-      } else {
+      let content = cachedTranslation;
+      if (!cachedTranslation) {
         console.warn('No cached translation for chunk:', chunk);
-        return chunk;
+        // Fallback to the original content
+        content = chunk.content;
       }
+      return chunk.format + content + chunk.trailingWhitespace;
     }).join('\n');
 
     setTranslatedText(translatedText);
