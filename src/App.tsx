@@ -14,6 +14,7 @@ import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache 
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
+  // @ts-ignore
   window['ydoc'] = ydoc; // For debugging purposes
   const [text, setText] = useState("");
   const [transcript, setTranscript] = useAsPlainText("transcript");
@@ -107,7 +108,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
       let content = cachedTranslation;
       if (!cachedTranslation) {
-        console.warn('No cached translation for chunk:', chunk);
+        if (chunk.content.trim() !== '')
+          // It's ok if we ended up with an empty chunk.
+          console.warn('No cached translation for chunk:', chunk);
         // Fallback to the original content
         content = chunk.content;
       }
@@ -211,7 +214,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 }
 
 const App = () => {
-  const docId = "doc4";
+  const docId = "doc7";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const authEndpoint = async () => {

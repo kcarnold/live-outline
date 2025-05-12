@@ -89,8 +89,8 @@ export function getDecomposedChunks(text: string) {
     return decomposedChunks;
 }
 
-// We need a type that is a map of string to string, but we don't want to use the built-in Map type
-// because it doesn't have a type signature that is compatible with the translation cache.
+// We need a type that is a map of string to string. The translation cache is actually a YMap, which has a slightly different
+// type signature, but we don't want to lose the type information entirely, so we use this type to represent it.
 export type TranslationCache = {
     get(key: string): string | undefined;
     set(key: string, value: string): void;
