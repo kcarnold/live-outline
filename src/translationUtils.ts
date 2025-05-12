@@ -110,7 +110,7 @@ export function getTranslationTodos(decomposedChunks: DecomposedChunk[], transla
     // 2: included only for context
     // The keys of the translation cache are always the trimmed chunks.
     const chunkStatus = decomposedChunks.map((chunk) => {
-        return translationCache.has(chunk.content) ? 0 : 1;
+        return (chunk.content === "" || translationCache.has(chunk.content)) ? 0 : 1;
     });
 
     // Mark a few lines before each "need to translate" chunk as "context"
