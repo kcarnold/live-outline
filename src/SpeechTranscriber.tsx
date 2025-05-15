@@ -10,7 +10,7 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
   const [transcript, setTranscript] = useState('')
 
   const getToken = async () => {
-    const response = await fetch('/api/aai_token');
+    const response = await fetch('/api/aai_token', { cache: 'no-store' });
     const data = await response.json();
 
     if (data.error) {
