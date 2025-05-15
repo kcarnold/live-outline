@@ -30,7 +30,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.static("public"));
+app.use(express.static("dist"));
 app.use(json());
 
 const aai = new AssemblyAI({ apiKey: getEnvOrCrash("ASSEMBLYAI_API_KEY") });
