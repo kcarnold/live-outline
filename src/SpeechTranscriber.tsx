@@ -1,5 +1,5 @@
 import './App.css';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { RealtimeTranscriber } from 'assemblyai/streaming';
 import RecordRTC from 'recordrtc';
 
@@ -7,7 +7,6 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
   const realtimeTranscriber = useRef<RealtimeTranscriber | null>(null);
   const recorder = useRef<RecordRTC | null>(null)
   const [isRecording, setIsRecording] = useState(false)
-  const [transcript, setTranscript] = useState('')
 
   const getToken = async () => {
     const response = await fetch('/api/aai_token', { cache: 'no-store' });
@@ -42,7 +41,6 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
           msg += `\n${text}`
         }
       }
-      setTranscript(msg)
       onTranscript(msg);
     });
 
