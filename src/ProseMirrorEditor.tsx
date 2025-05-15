@@ -16,12 +16,12 @@ import { EditorState } from 'prosemirror-state';
 import { exampleSetup } from 'prosemirror-example-setup';
 import { keymap } from 'prosemirror-keymap';
 import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
-import { redo, undo, yCursorPlugin, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
+import { redo, undo, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
 
 // For markdown conversion
 import { defaultMarkdownSerializer, schema } from 'prosemirror-markdown';
 import { useEffect, useRef, useState } from 'react';
-import { Awareness } from 'y-protocols/awareness.js';
+//import { Awareness } from 'y-protocols/awareness.js';
 
 
 const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger }: {
