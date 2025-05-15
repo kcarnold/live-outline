@@ -26,19 +26,20 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
       sampleRate: 16_000,
     });
 
-    const texts = {};
+    const texts = new Map<number, string>();
     realtimeTranscriber.current.on('transcript', transcript => {
       let msg = '';
       if (transcript.text === '') {
         return;
       }
       console.log(transcript)
-      texts[transcript.audio_start] = transcript.text;
-      const keys = Object.keys(texts);
+      texts.set(transcript.audio_start, transcript.text);
+      const keys = Array.from(texts.keys());
       keys.sort((a, b) => a - b);
       for (const key of keys) {
-        if (texts[key]) {
-          msg += `\n${texts[key]}`
+        const text = texts.get(key);
+        if (text) {
+          msg += `\n${text}`
         }
       }
       setTranscript(msg)
