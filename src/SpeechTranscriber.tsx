@@ -86,7 +86,7 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
     }
   }
 
-  const endTranscription = async (event) => {
+  const endTranscription = async (event: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
     event.preventDefault();
     setIsRecording(false)
 
