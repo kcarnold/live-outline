@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
+    "start": "env PORT=5008 node server.ts",
+    "dev": "vite --host 127.0.0.1",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "env PORT=5008 node server.ts",
     "dev:server": "node server.ts",
     "test": "vitest",
     "test:e2e": "node scripts/run-e2e-tests.js"
