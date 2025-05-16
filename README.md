@@ -2,7 +2,7 @@
 
 - Copy `template.env` to `.env`
 - Get a [y-sweet account](https://jamsocket.com/) (free is fine). Put the API key it gives you in `.env`.
-- Get an [Anthropic API key](https://console.anthropic.com/settings/keys). Likewise, it goes in `.env`.
+- Get a Gemini API key. Likewise, it goes in `.env`.
 - Run `yarn` to install packages.
 
 ## To run
@@ -18,6 +18,15 @@ Frontend:
 ```
 yarn run dev
 ```
+
+## Deployment
+
+```
+docker-compose build
+docker-compose up -d
+```
+
+
 
 
 # React + TypeScript + Vite
