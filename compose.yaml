@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5008:5008"
+    environment:
+      - NODE_ENV=production
+      - PORT=5008
+    env_file: "./.env"
+    restart: unless-stopped
+    # For development, you might want to uncomment these volumes
+    # volumes:
+    #   - ./:/usr/src/app
+    #   - /usr/src/app/node_modules
