@@ -21,7 +21,7 @@ export function findContiguousBlocks(arr: any[]) {
     return blocks;
 }
 
-export type DecomposedChunk = {
+export interface DecomposedChunk {
     format: string;
     content: string;
     trailingWhitespace: string;
@@ -188,8 +188,10 @@ export function constructTranslatedText(language: string, decomposedChunks: Deco
     const translatedText = decomposedChunks.map((chunk) => {
         const key = translationCacheKey(language, chunk.content);
       const cachedTranslation = translationCache.get(key) as string | undefined;
-      let content = cachedTranslation;
-      if (!cachedTranslation) {
+      let content: string;
+      if (cachedTranslation) {
+        content = cachedTranslation;
+      } else {
         if (chunk.content.trim() !== '')
           // It's ok if we ended up with an empty chunk.
           console.warn('No cached translation for', key);
