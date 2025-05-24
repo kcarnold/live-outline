@@ -22,7 +22,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           <input
             type="checkbox"
             checked={showOriginalText}
-            onChange={(e) => setShowOriginalText(e.target.checked)}
+            onChange={(e) => {setShowOriginalText(e.target.checked)}}
             className="rounded"
           />
           <span>Show Original Text</span>
@@ -36,7 +36,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           min="12"
           max="24"
           value={fontSize}
-          onChange={(e) => setFontSize(parseInt(e.target.value))}
+          onChange={(e) => {setFontSize(parseInt(e.target.value))}}
           className="w-full"
         />
       </div>
@@ -46,7 +46,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           <input
             type="checkbox"
             checked={showTranscript}
-            onChange={(e) => setShowTranscript(e.target.checked)}
+            onChange={(e) => {setShowTranscript(e.target.checked)}}
             className="rounded"
           />
           <span>Show Transcript</span>

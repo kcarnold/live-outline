@@ -1,5 +1,5 @@
 import './App.css';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useConnectionStatus, useMap, useYDoc, YDocProvider } from '@y-sweet/react';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
@@ -11,7 +11,7 @@ import { useAsPlainText } from './yjsUtils';
 import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache, constructTranslatedText, updateTranslationCache } from './translationUtils';
 
 
-function useScrollToBottom(ref: React.RefObject<HTMLDivElement | null>, deps: any[]) {
+function useScrollToBottom(ref: React.RefObject<HTMLDivElement | null>, deps: React.DependencyList) {
   useEffect(() => {
     setTimeout(() => {
       ref.current?.scrollIntoView({
@@ -40,8 +40,8 @@ function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
-  // @ts-ignore
-  window['ydoc'] = ydoc; // For debugging purposes
+  // @ts-expect-error
+  window.ydoc = ydoc; // For debugging purposes
   const [text, setText] = useState("");
   const [transcript, setTranscript] = useAsPlainText("transcript");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
