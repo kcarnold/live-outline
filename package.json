@@ -10,8 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:server": "node server.ts",
-    "test": "vitest",
-    "test:e2e": "node scripts/run-e2e-tests.js"
+    "test": "vitest"
   },
   "dependencies": {
     "@google/genai": "^0.9.0",
