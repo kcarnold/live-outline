@@ -18,6 +18,7 @@ function useScrollToBottom(ref: React.RefObject<HTMLDivElement | null>, deps: Re
         behavior: "smooth",
       });
     }, 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
@@ -40,7 +41,7 @@ function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
-  // @ts-expect-error
+  // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
   const [text, setText] = useState("");
   const [transcript, setTranscript] = useAsPlainText("transcript");
@@ -115,7 +116,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   }
   {showOriginalText && 
     <div className="flex-1/2 overflow-auto p-4">
-      <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslations()}/>
+      <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={doTranslations}/>
     </div>
   }
   {isEditor && <div className="flex justify-end p-4 bg-white border-t">
