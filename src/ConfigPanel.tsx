@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './configAtoms';
+import CheckboxForAtom from './CheckboxForAtom';
 
 interface ConfigPanelProps {
   onClose: () => void;
@@ -8,9 +9,7 @@ interface ConfigPanelProps {
 
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
-  const [showOriginalText, setShowOriginalText] = useAtom(showOriginalTextAtom);
   const [fontSize, setFontSize] = useAtom(fontSizeAtom);
-  const [showTranscript, setShowTranscript] = useAtom(showTranscriptAtom);
 
   return (
     <div className="absolute right-0 top-14 bg-white shadow-lg rounded-lg p-4 z-20 w-64 border border-gray-200">
@@ -22,17 +21,13 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
       </div>
       
       <div className="mb-4">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showOriginalText}
-            onChange={(e) => {setShowOriginalText(e.target.checked)}}
-            className="rounded"
-          />
-          <span>Show Original Text</span>
-        </label>
+        <CheckboxForAtom atom={showOriginalTextAtom} label="Show Original Text" />
       </div>
       
+      <div className="mb-4">
+        <CheckboxForAtom atom={showTranscriptAtom} label="Show Transcript" />
+      </div>
+
       <div className="mb-4">
         <label className="block mb-2">Font Size: {fontSize}px</label>
         <input
@@ -43,18 +38,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           onChange={(e) => {setFontSize(parseInt(e.target.value))}}
           className="w-full"
         />
-      </div>
-
-      <div className="mb-4">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showTranscript}
-            onChange={(e) => {setShowTranscript(e.target.checked)}}
-            className="rounded"
-          />
-          <span>Show Transcript</span>
-        </label>
       </div>
     </div>
   );
