@@ -13,7 +13,6 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
-      // Optionally add stylisticTypeChecked for style rules
       ...tseslint.configs.stylisticTypeChecked,
     ],
     files: ['**/*.{ts,tsx}'],
