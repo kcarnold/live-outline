@@ -14,7 +14,7 @@ export const useAsPlainText = (name: string): [string, (newText: string) => void
     };
     
     sharedText.observe(observer);
-    return () => sharedText.unobserve(observer);
+    return () => { sharedText.unobserve(observer); };
   }, [sharedText]);
 
   const setPlainText = (newText: string) => {

@@ -155,7 +155,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
         <button
-          onClick={() => setShowConfigPanel(!showConfigPanel)}
+          onClick={() => { setShowConfigPanel(!showConfigPanel); }}
           className="bg-gray-200 p-1 rounded-full hover:bg-gray-300"
           title="Settings"
         >
@@ -163,7 +163,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         </button>
         <ConnectionStatusWidget connectionStatus={connectionStatus} />
       </div>
-      {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
+      {showConfigPanel && <ConfigPanel onClose={() => { setShowConfigPanel(false); }} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
         {leftContent}
       </div>}

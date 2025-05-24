@@ -42,12 +42,12 @@ export function decompose(chunk: string): DecomposedChunk {
 }
 
 
-export type TranslationTodo = {
+export interface TranslationTodo {
     chunks: string[]; // the "content" part of the chunk; the formatting part is added back later
     offset: number;
     isTranslationNeeded: boolean[];
     translatedContext: string;
-};
+}
 
 
 export function getDecomposedChunks(text: string) {
@@ -91,13 +91,13 @@ export function getDecomposedChunks(text: string) {
 
 // We need a type that is a map of string to string. The translation cache is actually a YMap, which has a slightly different
 // type signature, but we don't want to lose the type information entirely, so we use this type to represent it.
-export type TranslationCache = {
+export interface TranslationCache {
     get(key: string): string | undefined;
     set(key: string, value: string): void;
     has(key: string): boolean;
 }
 
-export type GenericMap = {
+export interface GenericMap {
     get(key: string): any;
     set(key: string, value: any): void;
     has(key: string): boolean;
@@ -145,7 +145,7 @@ export function getTranslationTodos(language: string, decomposedChunks: Decompos
         const statusesInContext = chunkStatus.slice(start, end + 1);
         const translatedContext = chunksInContext.map((chunk) => {
             const key = translationCacheKey(language, chunk.content);
-            const cachedTranslation = translationCache.get(key) as string | undefined;
+            const cachedTranslation = translationCache.get(key);
             if (cachedTranslation) {
                 return chunk.format + cachedTranslation + chunk.trailingWhitespace;
             }
@@ -187,7 +187,7 @@ export function updateTranslationCache(serverResponse: any, translationCache: Tr
 export function constructTranslatedText(language: string, decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
     const translatedText = decomposedChunks.map((chunk) => {
         const key = translationCacheKey(language, chunk.content);
-      const cachedTranslation = translationCache.get(key) as string | undefined;
+      const cachedTranslation = translationCache.get(key);
       let content: string;
       if (cachedTranslation) {
         content = cachedTranslation;
