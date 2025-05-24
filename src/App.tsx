@@ -8,7 +8,7 @@ import { ConfigProvider, useConfig } from './ConfigContext';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
 import { useAsPlainText } from './yjsUtils';
-import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache } from './translationUtils';
+import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache, constructTranslatedText, updateTranslationCache } from './translationUtils';
 
 
 function useScrollToBottom(ref: React.RefObject<HTMLDivElement | null>, deps: any[]) {
@@ -91,42 +91,10 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         setIsTranslating(false);
         return;
       }
-
-      // For each block, the server gave us a list of updated chunks, which we can use to update the translation cache.
-      const translationResults = result.results as { sourceText: string; translatedText: string; }[][];
-      for (const block of translationResults) {
-        for (const result of block) {
-          const { sourceText, translatedText } = result;
-          // There shouldn't be anything to trim, but just in case, trim the source and translated text.
-          const trimmedSourceText = sourceText.trim();
-          const trimmedTranslatedText = translatedText.trim();
-          if (sourceText !== trimmedSourceText) {
-            console.warn('Source text was trimmed:', [sourceText, trimmedSourceText]);
-          }
-          if (translatedText !== trimmedTranslatedText) {
-            console.warn('Translated text was trimmed:', [translatedText, trimmedTranslatedText]);
-          }
-          // Update the translation cache with the new translation
-          translationCache.set(trimmedSourceText, trimmedTranslatedText);
-        }
-      }
+      updateTranslationCache(result, translationCache as GenericMap as TranslationCache);
     }
 
-    // Finally, reconstruct the translated text.
-    const translatedText = decomposedChunks.map((chunk) => {
-      const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
-      let content = cachedTranslation;
-      if (!cachedTranslation) {
-        if (chunk.content.trim() !== '')
-          // It's ok if we ended up with an empty chunk.
-          console.warn('No cached translation for chunk:', chunk);
-        // Fallback to the original content
-        content = chunk.content;
-      }
-      return chunk.format + content + chunk.trailingWhitespace;
-    }).join('\n');
-
-    setTranslatedText(translatedText);
+    setTranslatedText(constructTranslatedText(decomposedChunks, translationCache as GenericMap as TranslationCache));
     setIsTranslating(false);
   }
 
@@ -196,7 +164,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         {leftContent}
       </div>}
       <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} style={{ fontSize: `${fontSize}px` }}>
-        {isEditor && translationError && (
+        {isEditor && (translationError !== "") && (
           <div className="p-4 mb-4 bg-red-800 text-white rounded-md">
             <p className="font-bold">Translation Error:</p>
             <p>{translationError}</p>

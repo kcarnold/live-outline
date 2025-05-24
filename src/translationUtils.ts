@@ -155,3 +155,40 @@ export function getTranslationTodos(decomposedChunks: DecomposedChunk[], transla
     return translationTodos;
 
 }
+
+export function updateTranslationCache(serverResponse: any, translationCache: TranslationCache) {
+    // For each block, the server gave us a list of updated chunks, which we can use to update the translation cache.
+    const translationResults = serverResponse.results as { sourceText: string; translatedText: string; }[][];
+    for (const block of translationResults) {
+    for (const result of block) {
+        const { sourceText, translatedText } = result;
+        // There shouldn't be anything to trim, but just in case, trim the source and translated text.
+        const trimmedSourceText = sourceText.trim();
+        const trimmedTranslatedText = translatedText.trim();
+        if (sourceText !== trimmedSourceText) {
+        console.warn('Source text was trimmed:', [sourceText, trimmedSourceText]);
+        }
+        if (translatedText !== trimmedTranslatedText) {
+        console.warn('Translated text was trimmed:', [translatedText, trimmedTranslatedText]);
+        }
+        // Update the translation cache with the new translation
+        translationCache.set(trimmedSourceText, trimmedTranslatedText);
+    }
+    }
+}
+
+export function constructTranslatedText(decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
+    const translatedText = decomposedChunks.map((chunk) => {
+      const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
+      let content = cachedTranslation;
+      if (!cachedTranslation) {
+        if (chunk.content.trim() !== '')
+          // It's ok if we ended up with an empty chunk.
+          console.warn('No cached translation for chunk:', chunk);
+        // Fallback to the original content
+        content = chunk.content;
+      }
+      return chunk.format + content + chunk.trailingWhitespace;
+    }).join('\n');
+    return translatedText;
+}
