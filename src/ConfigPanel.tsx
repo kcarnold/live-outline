@@ -1,12 +1,16 @@
 import React from 'react';
-import { useConfig } from './ConfigContext';
+import { useAtom } from 'jotai';
+import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './configAtoms';
 
 interface ConfigPanelProps {
   onClose: () => void;
 }
 
+
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
-  const { showOriginalText, setShowOriginalText, fontSize, setFontSize, showTranscript, setShowTranscript } = useConfig();
+  const [showOriginalText, setShowOriginalText] = useAtom(showOriginalTextAtom);
+  const [fontSize, setFontSize] = useAtom(fontSizeAtom);
+  const [showTranscript, setShowTranscript] = useAtom(showTranscriptAtom);
 
   return (
     <div className="absolute right-0 top-14 bg-white shadow-lg rounded-lg p-4 z-20 w-64 border border-gray-200">

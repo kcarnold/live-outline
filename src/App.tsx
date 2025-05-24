@@ -4,7 +4,8 @@ import { useConnectionStatus, useMap, useYDoc, YDocProvider } from '@y-sweet/rea
 
 import ProseMirrorEditor from './ProseMirrorEditor';
 import { Remark } from 'react-remark';
-import { ConfigProvider, useConfig } from './ConfigContext';
+import { useAtom } from 'jotai';
+import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
 import { useAsPlainText } from './yjsUtils';
@@ -55,7 +56,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [isTranslating, setIsTranslating] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [translationError, setTranslationError] = useState("");
-  const { showOriginalText, fontSize, showTranscript } = useConfig();
+  const [showOriginalText] = useAtom(showOriginalTextAtom);
+  const [fontSize] = useAtom(fontSizeAtom);
+  const [showTranscript] = useAtom(showTranscriptAtom);
   
   const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
