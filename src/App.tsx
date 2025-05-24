@@ -199,19 +199,18 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         {leftContent}
       </div>}
       <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
-        {translationError ? (
+        {isEditor && translationError && (
           <div className="p-4 mb-4 bg-red-800 text-white rounded-md">
             <p className="font-bold">Translation Error:</p>
             <p>{translationError}</p>
           </div>
-        ) : (
+          )}
           <div>
             <Remark>
               {translatedText}
             </Remark>
             <div ref={translatedTextEndRef} />
           </div>
-        )}
       </div>
     </div>
   );
