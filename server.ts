@@ -1,8 +1,7 @@
 import 'dotenv/config'
-import express, { static as serveStatic, json } from "express";
-import { join, dirname } from "path";
+import express from "express";
+import path from "path";
 import { fileURLToPath } from 'url';
-import path from 'path';
 import { AssemblyAI } from "assemblyai";
 import { DocumentManager } from '@y-sweet/sdk'
 
@@ -31,13 +30,13 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.static("dist"));
-app.use(json());
+app.use(express.json());
 
 const aai = new AssemblyAI({ apiKey: getEnvOrCrash("ASSEMBLYAI_API_KEY") });
 app.use(
   "/assemblyai.js",
   express.static(
-    join(__dirname, "node_modules/assemblyai/dist/assemblyai.umd.js"),
+    path.join(__dirname, "node_modules/assemblyai/dist/assemblyai.umd.js"),
   ),
 );
  
@@ -87,7 +86,7 @@ const PORT = process.env.PORT || 8000;
 app.set("port", PORT);
 
 const server = app.listen(app.get("port"), () => {
-  console.log(`HTTP/WS Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 }).on('error', (error) => {
   console.error('Server error:', error);
 });
