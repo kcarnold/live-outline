@@ -203,11 +203,9 @@ const App = () => {
   };
   
   return (
-    <ConfigProvider>
-      <YDocProvider docId={docId} authEndpoint={authEndpoint}>
-        <AppInner isEditor={isEditor} />
-      </YDocProvider>
-    </ConfigProvider>
+    <YDocProvider docId={docId} authEndpoint={authEndpoint}>
+      <AppInner isEditor={isEditor} />
+    </YDocProvider>
   );
 };
 
