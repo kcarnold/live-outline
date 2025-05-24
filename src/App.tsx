@@ -34,23 +34,23 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
 
 
+  // Scroll to bottom using a dummy div and scrollIntoView
+  const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    // Needs a delay to ensure the scroll happens after the DOM has updated
     setTimeout(() => {
-      if (translatedTextContainerRef.current) {
-        translatedTextContainerRef.current.scrollTop = translatedTextContainerRef.current.scrollHeight;
-      }
+      translatedTextEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   }, [translatedText]);
 
-  // Also scroll the transcript area
+  // Also scroll the transcript area using a dummy div
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setTimeout(() => {
-      if (showTranscript && transcriptContainerRef.current) {
-        transcriptContainerRef.current.scrollTop = transcriptContainerRef.current.scrollHeight;
+      if (showTranscript) {
+        transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }
     }, 100);
-  }, [transcript]);
+  }, [transcript, showTranscript]);
   
 
   async function doTranslation() {
@@ -72,9 +72,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       });
 
       const result = await response.json().catch(() => null);
-      if (!response.ok || !result.ok) {
+      if (!response.ok || !result?.ok) {
         // If we have a JSON result with error details, include them in the error message
-        if (result && result.error) {
+        if (result?.error) {
           setTranslationError(`Translation error (${response.status}): ${result.error}`);
         } else {
           setTranslationError(`HTTP error! Status: ${response.status}`);
@@ -128,7 +128,8 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
   {showTranscript &&
     <div className="flex-1/2 overflow-auto p-4 touch-pan-y" ref={transcriptContainerRef}>
-    {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
+      {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
+      <div ref={transcriptEndRef} />
     </div>
   }
   {showOriginalText && 
@@ -204,9 +205,12 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             <p>{translationError}</p>
           </div>
         ) : (
-          <Remark>
-            {translatedText}
-          </Remark>
+          <div>
+            <Remark>
+              {translatedText}
+            </Remark>
+            <div ref={translatedTextEndRef} />
+          </div>
         )}
       </div>
     </div>
