@@ -103,14 +103,20 @@ export type GenericMap = {
     has(key: string): boolean;
 }
 
-export function getTranslationTodos(decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
+export function translationCacheKey(language: string, chunkText: string) {
+    // The translation cache key is a combination of the language and the chunk text.
+    // This is to avoid collisions between different languages.
+    return `${language}:${chunkText}`;
+}
+
+export function getTranslationTodos(language: string, decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
     // Make an array where each entry is:
     // 0: don't include
     // 1: need to translate
     // 2: included only for context
     // The keys of the translation cache are always the trimmed chunks.
     const chunkStatus = decomposedChunks.map((chunk) => {
-        return (chunk.content === "" || translationCache.has(chunk.content)) ? 0 : 1;
+        return (chunk.content === "" || translationCache.has(translationCacheKey(language, chunk.content))) ? 0 : 1;
     });
 
     // Mark a few lines before each "need to translate" chunk as "context"
@@ -138,7 +144,8 @@ export function getTranslationTodos(decomposedChunks: DecomposedChunk[], transla
         const chunksInContext = decomposedChunks.slice(start, end + 1);
         const statusesInContext = chunkStatus.slice(start, end + 1);
         const translatedContext = chunksInContext.map((chunk) => {
-            const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
+            const key = translationCacheKey(language, chunk.content);
+            const cachedTranslation = translationCache.get(key) as string | undefined;
             if (cachedTranslation) {
                 return chunk.format + cachedTranslation + chunk.trailingWhitespace;
             }
@@ -158,10 +165,10 @@ export function getTranslationTodos(decomposedChunks: DecomposedChunk[], transla
 
 export function updateTranslationCache(serverResponse: any, translationCache: TranslationCache) {
     // For each block, the server gave us a list of updated chunks, which we can use to update the translation cache.
-    const translationResults = serverResponse.results as { sourceText: string; translatedText: string; }[][];
+    const translationResults = serverResponse.results as { sourceText: string; translatedText: string; language: string}[][];
     for (const block of translationResults) {
     for (const result of block) {
-        const { sourceText, translatedText } = result;
+        const { sourceText, translatedText, language } = result;
         // There shouldn't be anything to trim, but just in case, trim the source and translated text.
         const trimmedSourceText = sourceText.trim();
         const trimmedTranslatedText = translatedText.trim();
@@ -172,19 +179,20 @@ export function updateTranslationCache(serverResponse: any, translationCache: Tr
         console.warn('Translated text was trimmed:', [translatedText, trimmedTranslatedText]);
         }
         // Update the translation cache with the new translation
-        translationCache.set(trimmedSourceText, trimmedTranslatedText);
+        translationCache.set(translationCacheKey(language, trimmedSourceText), trimmedTranslatedText);
     }
     }
 }
 
-export function constructTranslatedText(decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
+export function constructTranslatedText(language: string, decomposedChunks: DecomposedChunk[], translationCache: TranslationCache) {
     const translatedText = decomposedChunks.map((chunk) => {
-      const cachedTranslation = translationCache.get(chunk.content) as string | undefined;
+        const key = translationCacheKey(language, chunk.content);
+      const cachedTranslation = translationCache.get(key) as string | undefined;
       let content = cachedTranslation;
       if (!cachedTranslation) {
         if (chunk.content.trim() !== '')
           // It's ok if we ended up with an empty chunk.
-          console.warn('No cached translation for chunk:', chunk);
+          console.warn('No cached translation for', key);
         // Fallback to the original content
         content = chunk.content;
       }

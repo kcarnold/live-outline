@@ -67,10 +67,10 @@ app.post('/api/ys-auth', async (req, res) => {
 app.post('/api/requestTranslatedBlocks', async (req, res) => {
   console.log('Request translated blocks:', req.body);
   const translationTodos = (req.body?.translationTodos as [TranslationTodo]) ?? [];
-  const languages = req.body?.languages ?? [];
+  const language = req.body?.language;
 
   const promises = translationTodos.map(async (todo) => {
-    return await translateBlock(geminiProvider, todo, languages[0]);
+    return await translateBlock(geminiProvider, todo, language);
   });
 
   const results = await Promise.all(promises);

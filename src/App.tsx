@@ -1,5 +1,5 @@
 import './App.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useConnectionStatus, useMap, useYDoc, YDocProvider } from '@y-sweet/react';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
@@ -62,9 +62,13 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   useScrollToBottom(translatedTextEndRef, [translatedText]);
   useScrollToBottom(transcriptEndRef, [transcript]);
 
-  async function doTranslation() {
+  const doTranslations = useCallback(() => {
+    return Promise.all([doTranslation(language)]);
+  }, [language]);
+
+  async function doTranslation(language: string) {
     const decomposedChunks = getDecomposedChunks(text);
-    const translationTodos = getTranslationTodos(decomposedChunks, translationCache as GenericMap as TranslationCache);
+    const translationTodos = getTranslationTodos(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
 
     if (translationTodos.length > 0) {
       setIsTranslating(true);
@@ -76,7 +80,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         },
         body: JSON.stringify({
           translationTodos,
-          languages: [language],
+          language: language,
         }),
       });
 
@@ -94,7 +98,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       updateTranslationCache(result, translationCache as GenericMap as TranslationCache);
     }
 
-    setTranslatedText(constructTranslatedText(decomposedChunks, translationCache as GenericMap as TranslationCache));
+    setTranslatedText(constructTranslatedText(language, decomposedChunks, translationCache as GenericMap as TranslationCache));
     setIsTranslating(false);
   }
 
@@ -111,7 +115,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   }
   {showOriginalText && 
     <div className="flex-1/2 overflow-auto p-4">
-      <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslation()}/>
+      <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={() => doTranslations()}/>
     </div>
   }
   {isEditor && <div className="flex justify-end p-4 bg-white border-t">
@@ -139,7 +143,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     </button>
     <button 
       className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-      onClick={doTranslation}
+      onClick={doTranslations}
       disabled={isTranslating}
     >
       {isTranslating ? 'Translating...' : 'Translate'}

@@ -103,7 +103,7 @@ ${inputDocument}
         const lineNumber = line.num;
         const translatedText = line.translation;
         const sourceText = todo.chunks[lineNumber];
-        return { sourceText, translatedText };
+        return { sourceText, translatedText, language };
     });
     return translatedBlocks;
 }  
