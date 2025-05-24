@@ -11,6 +11,32 @@ import { useAsPlainText } from './yjsUtils';
 import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache } from './translationUtils';
 
 
+function useScrollToBottom(ref: React.RefObject<HTMLDivElement | null>, deps: any[]) {
+  useEffect(() => {
+    setTimeout(() => {
+      ref.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
+  }, deps);
+}
+
+function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
+  return <div className={`px-1 py-1 rounded-full text-xs font-medium ${
+      connectionStatus === 'connected' 
+        ? 'bg-green-500 text-white' 
+        : connectionStatus === 'connecting' 
+        ? 'bg-yellow-500 text-white' 
+        : 'bg-red-500 text-white'
+    }`}>
+      {connectionStatus === 'connected' 
+        ? 'Connected' 
+        : connectionStatus === 'connecting' 
+        ? 'Connecting...' 
+        : 'Disconnected'}
+    </div>;
+}
+
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
@@ -30,28 +56,11 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [translationError, setTranslationError] = useState("");
   const { showOriginalText, fontSize, showTranscript } = useConfig();
   
-  const translatedTextContainerRef = useRef<HTMLDivElement | null>(null);
-  const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
-
-
-  // Scroll to bottom using a dummy div and scrollIntoView
   const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    setTimeout(() => {
-      translatedTextEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  }, [translatedText]);
-
-  // Also scroll the transcript area using a dummy div
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    setTimeout(() => {
-      if (showTranscript) {
-        transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-  }, [transcript, showTranscript]);
-  
+
+  useScrollToBottom(translatedTextEndRef, [translatedText]);
+  useScrollToBottom(transcriptEndRef, [transcript]);
 
   async function doTranslation() {
     const decomposedChunks = getDecomposedChunks(text);
@@ -127,7 +136,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const leftContent = <>
   {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
   {showTranscript &&
-    <div className="flex-1/2 overflow-auto p-4 touch-pan-y" ref={transcriptContainerRef}>
+    <div className="flex-1/2 overflow-auto p-4 touch-pan-y">
       {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
       <div ref={transcriptEndRef} />
     </div>
@@ -180,25 +189,13 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         >
           ⚙️
         </button>
-        <div className={`px-1 py-1 rounded-full text-xs font-medium ${
-          connectionStatus === 'connected' 
-            ? 'bg-green-500 text-white' 
-            : connectionStatus === 'connecting' 
-            ? 'bg-yellow-500 text-white' 
-            : 'bg-red-500 text-white'
-        }`}>
-          {connectionStatus === 'connected' 
-            ? 'Connected' 
-            : connectionStatus === 'connecting' 
-            ? 'Connecting...' 
-            : 'Disconnected'}
-        </div>
+        <ConnectionStatusWidget connectionStatus={connectionStatus} />
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => setShowConfigPanel(false)} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
         {leftContent}
       </div>}
-      <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} ref={translatedTextContainerRef} style={{ fontSize: `${fontSize}px` }}>
+      <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} style={{ fontSize: `${fontSize}px` }}>
         {isEditor && translationError && (
           <div className="p-4 mb-4 bg-red-800 text-white rounded-md">
             <p className="font-bold">Translation Error:</p>
