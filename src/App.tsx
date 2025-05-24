@@ -63,11 +63,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   useScrollToBottom(translatedTextEndRef, [translatedText]);
   useScrollToBottom(transcriptEndRef, [transcript]);
 
-  const doTranslations = useCallback(() => {
-    return Promise.all([doTranslation(language)]);
-  }, [language]);
-
-  async function doTranslation(language: string) {
+  const doTranslation = useCallback(async function doTranslation(language: string) {
     const decomposedChunks = getDecomposedChunks(text);
     const translationTodos = getTranslationTodos(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
 
@@ -101,7 +97,12 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
     setTranslatedText(constructTranslatedText(language, decomposedChunks, translationCache as GenericMap as TranslationCache));
     setIsTranslating(false);
-  }
+  }, [text, translationCache, setTranslatedText]);
+
+  const doTranslations = useCallback(() => {
+    return Promise.all([doTranslation(language)]);
+  }, [language, doTranslation]);
+
 
   const leftSideShown = isEditor || showOriginalText || showTranscript;
   const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
