@@ -10,7 +10,7 @@ import {
   ProseMirrorDoc,
   reactKeys,
 } from "@handlewithcare/react-prosemirror";
-import { EditorState } from 'prosemirror-state';
+import { EditorState, Transaction } from 'prosemirror-state';
 
 
 import { exampleSetup } from 'prosemirror-example-setup';
@@ -18,9 +18,13 @@ import { keymap } from 'prosemirror-keymap';
 import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { redo, undo, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
 
+import { gapCursor } from "prosemirror-gapcursor";
+import "prosemirror-gapcursor/style/gapcursor.css";
+
+
 // For markdown conversion
 import { defaultMarkdownSerializer, schema } from 'prosemirror-markdown';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 //import { Awareness } from 'y-protocols/awareness.js';
 
 
@@ -63,23 +67,26 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
         }
       }),
       ...exampleSetup({ schema, history: false, menuBar: false }),
+      gapCursor(),
     ] })
   );
 
+  const dispatchTransaction = useCallback((transaction: Transaction) => {
+          const newState = editorState.apply(transaction);
+          setEditorState(newState);
+  
+          // Convert content to markdown when it changes
+          if (transaction.docChanged && onTextChanged) {
+            const serializedContent = defaultMarkdownSerializer.serialize(newState.doc);
+            onTextChanged(serializedContent);
+          }
+        }, [editorState, onTextChanged]);
+        
   return (
     <ProseMirror
       state={editorState}
       editable={() => editable}
-      dispatchTransaction={(transaction) => {
-        const newState = editorState.apply(transaction);
-        setEditorState((s) => s.apply(transaction));
-
-        // Convert content to markdown when it changes
-        if (transaction.docChanged && onTextChanged) {
-          const serializedContent = defaultMarkdownSerializer.serialize(newState.doc);
-          onTextChanged(serializedContent);
-        }
-      }}
+      dispatchTransaction={dispatchTransaction}
     >
       <ProseMirrorDoc />
     </ProseMirror>
