@@ -55,7 +55,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
-  const [text, setText] = useState("");
+  const textRef = useRef("");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
   const sharedMeta = useMap("meta");
   const language = sharedMeta.get("language") as string || "Spanish";
@@ -75,7 +75,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   useScrollToBottom(translatedTextEndRef, [translatedText]);
 
   const doTranslation = useCallback(async function doTranslation(language: string) {
-    const decomposedChunks = getDecomposedChunks(text);
+    const decomposedChunks = getDecomposedChunks(textRef.current);
     const translationTodos = getTranslationTodos(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
 
     if (translationTodos.length > 0) {
@@ -108,7 +108,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
 
     setTranslatedText(constructTranslatedText(language, decomposedChunks, translationCache as GenericMap as TranslationCache));
     setIsTranslating(false);
-  }, [text, translationCache, setTranslatedText]);
+  }, [translationCache, setTranslatedText]);
 
   const doTranslations = useCallback(() => {
     return Promise.all([doTranslation(language)]);
@@ -127,7 +127,12 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   }
   {showOriginalText && 
     <div className="flex-1/2 overflow-auto p-4">
-      <ProseMirrorEditor yDoc={ydoc} onTextChanged={isEditor ? setText : () => null} editable={isEditor} onTranslationTrigger={doTranslations}/>
+      <ProseMirrorEditor
+        yDoc={ydoc}
+        onTextChanged={isEditor ? (val => { textRef.current = val; }) : () => null}
+        editable={isEditor}
+        onTranslationTrigger={doTranslations}
+      />
     </div>
   }
   {isEditor && <div className="flex justify-end p-4 bg-white border-t">
