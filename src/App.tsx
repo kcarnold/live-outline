@@ -1,27 +1,18 @@
 import './App.css';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useConnectionStatus, useMap, useYDoc, YDocProvider } from '@y-sweet/react';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
-import { Remark } from 'react-remark';
+
+import TranslatedTextViewer from './TranslatedTextViewer';
 import { useAtom } from 'jotai';
 import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
-import { useAsPlainText } from './yjsUtils';
+import { useAsPlainText, usePlainTextSetter } from './yjsUtils';
 import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache, constructTranslatedText, updateTranslationCache } from './translationUtils';
+import { useScrollToBottom } from './reactUtils';
 
-
-function useScrollToBottom(ref: React.RefObject<HTMLDivElement | null>, deps: React.DependencyList) {
-  useEffect(() => {
-    setTimeout(() => {
-      ref.current?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }, 100);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
-}
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
   return <div className={`px-1 py-1 rounded-full text-xs font-medium ${
@@ -56,7 +47,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
   const textRef = useRef("");
-  const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
+  const setTranslatedText = usePlainTextSetter("translatedText");
   const sharedMeta = useMap("meta");
   const language = sharedMeta.get("language") as string || "Spanish";
   const setLanguage = (newLanguage: string) => {
@@ -69,10 +60,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [showOriginalText] = useAtom(showOriginalTextAtom);
   const [fontSize] = useAtom(fontSizeAtom);
   const [showTranscript] = useAtom(showTranscriptAtom);
-  
-  const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
-  
-  useScrollToBottom(translatedTextEndRef, [translatedText]);
 
   const doTranslation = useCallback(async function doTranslation(language: string) {
     const decomposedChunks = getDecomposedChunks(textRef.current);
@@ -191,12 +178,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             <p>{translationError}</p>
           </div>
           )}
-          <div>
-            <Remark>
-              {translatedText}
-            </Remark>
-            <div ref={translatedTextEndRef} />
-          </div>
+          <TranslatedTextViewer yJsKey="translatedText" />
       </div>
     </div>
   );
