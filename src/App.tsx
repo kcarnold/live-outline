@@ -10,7 +10,7 @@ import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './config
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
 import { useAsPlainText, usePlainTextSetter } from './yjsUtils';
-import { getTranslationTodos, getDecomposedChunks, GenericMap, TranslationCache, constructTranslatedText, updateTranslationCache } from './translationUtils';
+import { GenericMap, TranslationCache, getUpdatedTranslation } from './translationUtils';
 import { useScrollToBottom } from './reactUtils';
 
 
@@ -61,45 +61,26 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [fontSize] = useAtom(fontSizeAtom);
   const [showTranscript] = useAtom(showTranscriptAtom);
 
-  const doTranslation = useCallback(async function doTranslation(language: string) {
-    const decomposedChunks = getDecomposedChunks(textRef.current);
-    const translationTodos = getTranslationTodos(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
-
-    if (translationTodos.length > 0) {
-      setIsTranslating(true);
-      setTranslationError("");
-      const response = await fetch('/api/requestTranslatedBlocks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          translationTodos,
-          language: language,
-        }),
-      });
-
-      const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.ok) {
-        // If we have a JSON result with error details, include them in the error message
-        if (result?.error) {
-          setTranslationError(`Translation error (${response.status}): ${result.error}`);
-        } else {
-          setTranslationError(`HTTP error! Status: ${response.status}`);
-        }
-        setIsTranslating(false);
-        return;
-      }
-      updateTranslationCache(result, translationCache as GenericMap as TranslationCache);
+  const doTranslations = useCallback(async () => {
+    async function doTranslation(language: string) {
+      const updatedText = await getUpdatedTranslation(language, translationCache as GenericMap as TranslationCache, textRef.current);
+      setTranslatedText(updatedText);
     }
 
-    setTranslatedText(constructTranslatedText(language, decomposedChunks, translationCache as GenericMap as TranslationCache));
-    setIsTranslating(false);
-  }, [translationCache, setTranslatedText]);
+    setIsTranslating(true);
+    setTranslationError("");
 
-  const doTranslations = useCallback(() => {
-    return Promise.all([doTranslation(language)]);
-  }, [language, doTranslation]);
+    try {
+      await Promise.all([doTranslation(language)]);
+    }
+    catch (error) {
+      console.error("Error during translation:", error);
+      setTranslationError(error instanceof Error ? error.message : "Unknown error");
+    }
+    finally {
+      setIsTranslating(false);
+    }
+  }, [language, setTranslationError, setTranslatedText, translationCache]);
 
 
   const leftSideShown = isEditor || showOriginalText || showTranscript;

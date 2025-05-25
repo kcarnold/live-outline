@@ -202,3 +202,34 @@ export function constructTranslatedText(language: string, decomposedChunks: Deco
     }).join('\n');
     return translatedText;
 }
+
+export async function getUpdatedTranslation(language: string, translationCache: TranslationCache, text: string) {
+    const decomposedChunks = getDecomposedChunks(text);
+    const translationTodos = getTranslationTodos(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
+
+    if (translationTodos.length > 0) {
+    const response = await fetch('/api/requestTranslatedBlocks', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+        translationTodos,
+        language: language,
+        }),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.ok) {
+        // If we have a JSON result with error details, include them in the error message
+        if (result?.error) {
+        throw new Error(`Translation error (${response.status}): ${result.error}`);
+        } else {
+        throw new Error(`Translation error (${response.status}): ${response.statusText}`);
+        }
+    }
+    updateTranslationCache(result, translationCache);
+    }
+    const translatedText = constructTranslatedText(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
+    return translatedText;
+}
