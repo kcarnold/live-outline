@@ -39,13 +39,23 @@ function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string
     </div>;
 }
 
+function TranscriptViewer() {
+  const [transcript] = useAsPlainText("transcript");
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
+  useScrollToBottom(transcriptEndRef, [transcript]);
+
+  return <>
+      {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
+      <div ref={transcriptEndRef} />
+  </>
+}
+
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
   const [text, setText] = useState("");
-  const [transcript, setTranscript] = useAsPlainText("transcript");
   const [translatedText, setTranslatedText] = useAsPlainText("translatedText");
   const sharedMeta = useMap("meta");
   const language = sharedMeta.get("language") as string || "Spanish";
@@ -61,10 +71,8 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const [showTranscript] = useAtom(showTranscriptAtom);
   
   const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
-  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-
+  
   useScrollToBottom(translatedTextEndRef, [translatedText]);
-  useScrollToBottom(transcriptEndRef, [transcript]);
 
   const doTranslation = useCallback(async function doTranslation(language: string) {
     const decomposedChunks = getDecomposedChunks(text);
@@ -111,11 +119,10 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
 
   const leftContent = <>
-  {isEditor && <SpeechTranscriber onTranscript={setTranscript} />}
+  {isEditor && <SpeechTranscriber />}
   {showTranscript &&
     <div className="flex-1/2 overflow-auto p-4 touch-pan-y">
-      {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
-      <div ref={transcriptEndRef} />
+      <TranscriptViewer />
     </div>
   }
   {showOriginalText && 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import diff from 'fast-diff';
 import { useText } from '@y-sweet/react';
-
+import * as Y from 'yjs';
 
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 export const useAsPlainText = (name: string): [string, (newText: string) => void] => {
@@ -18,14 +18,27 @@ export const useAsPlainText = (name: string): [string, (newText: string) => void
   }, [sharedText]);
 
   const setPlainText = (newText: string) => {
-    // Get the current text value directly from sharedText instead of using potentially stale state
-    const currentText = sharedText.toString();
-    const delta = diffToDelta(diff(currentText, newText));
-    sharedText.applyDelta(delta);
+    setYTextFromString(sharedText, newText);
+    // Don't set the state here, as it will be set by the observer
   };
   
   return [text, setPlainText];
 };
+
+export const usePlainTextSetter = (name: string): ((newText: string) => void) => {
+  const sharedText = useText(name);
+  const setPlainText = (newText: string) => {
+    setYTextFromString(sharedText, newText);
+  };
+  return setPlainText;
+};
+
+
+export function setYTextFromString(yText: Y.Text, text: string) {
+  const currentText = yText.toString();
+  const delta = diffToDelta(diff(currentText, text));
+  yText.applyDelta(delta);
+}
 
 function diffToDelta(diffResult: diff.Diff[]): any[] {
   return diffResult.map(([op, value]) => {

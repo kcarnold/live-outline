@@ -2,8 +2,10 @@ import './App.css';
 import { useRef, useState } from 'react';
 import { RealtimeTranscriber } from 'assemblyai/streaming';
 import RecordRTC from 'recordrtc';
+import { usePlainTextSetter } from './yjsUtils';
 
-function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) => void}) {
+function SpeechTranscriber() {
+  const setTranscript = usePlainTextSetter("transcript");
   const realtimeTranscriber = useRef<RealtimeTranscriber | null>(null);
   const recorder = useRef<RecordRTC | null>(null)
   const [isRecording, setIsRecording] = useState(false)
@@ -41,7 +43,7 @@ function SpeechTranscriber({onTranscript}: {onTranscript: (transcript: string) =
           msg += `\n${text}`
         }
       }
-      onTranscript(msg);
+      setTranscript(msg);
     });
 
     realtimeTranscriber.current.on('error', event => {
