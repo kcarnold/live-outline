@@ -6,10 +6,12 @@ import * as Y from 'yjs';
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 export const useAsPlainText = (name: string): [string, (newText: string) => void] => {
   const sharedText = useText(name);
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const [text, setText] = useState(() => sharedText.toString());
   
   useEffect(() => {
     const observer = () => {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       setText(sharedText.toString());
     };
     
@@ -35,12 +37,19 @@ export const usePlainTextSetter = (name: string): ((newText: string) => void) =>
 
 
 export function setYTextFromString(yText: Y.Text, text: string) {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const currentText = yText.toString();
+  if (currentText === text) return;
   const delta = diffToDelta(diff(currentText, text));
   yText.applyDelta(delta);
 }
 
-function diffToDelta(diffResult: diff.Diff[]): any[] {
+type DeltaOperation = 
+  | { insert: string }
+  | { delete: number }
+  | { retain: number };
+
+function diffToDelta(diffResult: diff.Diff[]): DeltaOperation[] {
   return diffResult.map(([op, value]) => {
     if (op === diff.INSERT) 
       return { insert: value };
@@ -48,7 +57,6 @@ function diffToDelta(diffResult: diff.Diff[]): any[] {
       return { delete: value.length };
     if (op === diff.EQUAL)
       return { retain: value.length };
-    console.error('Unknown diff operation:', op);
-    return null;
+    throw new Error('Unknown diff operation: ' + op);
   });
 }
