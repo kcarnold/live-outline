@@ -6,7 +6,7 @@ import * as Y from 'yjs';
 // Hook based on implementation here https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
 export const useAsPlainText = (name: string): [string, (newText: string) => void] => {
   const sharedText = useText(name);
-  const [text, setText] = useState(sharedText.toString());
+  const [text, setText] = useState(() => sharedText.toString());
   
   useEffect(() => {
     const observer = () => {
