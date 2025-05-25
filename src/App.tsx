@@ -35,8 +35,9 @@ function TranscriptViewer() {
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   useScrollToBottom(transcriptEndRef, [transcript]);
 
+  const transcriptWithoutPunctuation = transcript.replace(/[.,]/g, '');
   return <>
-      {transcript.split('\n').map((x, i) => <div key={i}>{x}</div>)}
+      {transcriptWithoutPunctuation.split('\n').map((x, i) => <div key={i}>{x}</div>)}
       <div ref={transcriptEndRef} />
   </>
 }
