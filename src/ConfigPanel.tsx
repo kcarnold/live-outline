@@ -33,7 +33,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
         <input
           type="range"
           min="12"
-          max="24"
+          max="64"
           value={fontSize}
           onChange={(e) => {setFontSize(parseInt(e.target.value))}}
           className="w-full"
