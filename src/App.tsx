@@ -1,62 +1,20 @@
-// --- LayoutDiagram helper for visualizing layouts ---
-const componentColors: Record<string, string> = {
-  transcript: "bg-green-300 dark:bg-green-700",
-  sourceText: "bg-yellow-200 dark:bg-yellow-600",
-  translationControls: "bg-blue-200 dark:bg-blue-700",
-  translatedText: "bg-purple-200 dark:bg-purple-700",
-};
-
-const componentLabels: Record<string, string> = {
-  transcript: "T",
-  sourceText: "S",
-  translationControls: "C",
-  translatedText: "Tr",
-};
-
-function LayoutDiagram({ layout }: { layout: string[][] }) {
-  // layout is a 2D array: columns of rows
-  // Find the max column height for grid alignment
-  const maxRows = Math.max(...layout.map(col => col.length));
-  return (
-    <div className="flex border border-gray-300 dark:border-gray-700 rounded overflow-hidden mr-2" style={{ minWidth: 48 }}>
-      {layout.map((col, i) => (
-        <div key={i} className="flex flex-col">
-          {Array.from({ length: maxRows }).map((_, j) => {
-            const key = col[j];
-            return key ? (
-              <div
-                key={key + j}
-                className={`w-6 h-6 flex items-center justify-center text-xs font-bold border-b border-r border-gray-200 dark:border-gray-700 ${componentColors[key] || "bg-gray-200"}`}
-                title={key}
-              >
-                {componentLabels[key] || key[0].toUpperCase()}
-              </div>
-            ) : (
-              <div key={"empty" + j} className="w-6 h-6 border-b border-r border-gray-200 dark:border-gray-700 bg-transparent" />
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
-}
-import React from 'react';
 import { useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
-import { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import './App.css';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
 import TranslationControls from './TranslationControls';
 
 import { useAtom } from 'jotai';
-import { fontSizeAtom, availableLayouts, isEditorAtom } from './configAtoms';
+import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { availableLayouts, fontSizeAtom, isEditorAtom } from './configAtoms';
+import { LayoutDiagram } from './LayoutDiagram';
+import { useScrollToBottom } from './reactUtils';
 import SpeechTranscriber from './SpeechTranscriber';
 import TranslatedTextViewer from './TranslatedTextViewer';
-import { useAsPlainText } from './yjsUtils';
-import { useScrollToBottom } from './reactUtils';
 import { translatedTextKeyForLanguage } from './translationUtils';
 import { useTranslationManager } from './useTranslationManager';
-import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+import { useAsPlainText } from './yjsUtils';
 
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
@@ -98,18 +56,20 @@ function HomePage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
       <h1 className="text-2xl font-bold mb-6 mt-8">Live Outline: Choose Language & Layout</h1>
       <div className="flex flex-col gap-6 w-full max-w-xl">
-        {languages.map(lang => (
-          <div key={lang} className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4">
-            <div className="font-semibold mb-2">{lang}</div>
-            <div className="flex flex-col gap-2">
-              {availableLayouts.map(layout => (
-                <div key={layout.key} className="flex items-center gap-2">
-                  <LayoutDiagram layout={layout.layout} />
+        {availableLayouts.map(layout => (
+          <div key={layout.key} className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4">
+            <div className="flex flex-row items-center gap-3 mb-2">
+              <LayoutDiagram layout={layout.layout} />
+              <div className="font-semibold">{layout.label}</div>
+            </div>
+            <div className="flex flex-row gap-2">
+              {languages.map(lang => (
+                <div key={lang} className="flex items-center gap-2">
                   <Link
                     to={`/${layout.key}/${encodeURIComponent(lang)}`}
                     className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
                   >
-                    {layout.label}
+                    {lang}
                   </Link>
                 </div>
               ))}
