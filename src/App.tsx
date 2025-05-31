@@ -1,21 +1,20 @@
-import './App.css';
-import { useState, useRef } from 'react';
 import { useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
-
+import { useRef, useState } from 'react';
+import './App.css';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
 import TranslationControls from './TranslationControls';
 
-import TranslatedTextViewer from './TranslatedTextViewer';
 import { useAtom } from 'jotai';
-import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom, languageAtom } from './configAtoms';
+import { fontSizeAtom, languageAtom, showOriginalTextAtom, showTranscriptAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
+import TranslatedTextViewer from './TranslatedTextViewer';
 import { useAsPlainText } from './yjsUtils';
 
-import { useTranslationManager } from './useTranslationManager';
 import { useScrollToBottom } from './reactUtils';
 import { translatedTextKeyForLanguage } from './translationUtils';
+import { useTranslationManager } from './useTranslationManager';
 
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
