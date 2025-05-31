@@ -1,3 +1,45 @@
+// --- LayoutDiagram helper for visualizing layouts ---
+const componentColors: Record<string, string> = {
+  transcript: "bg-green-300 dark:bg-green-700",
+  sourceText: "bg-yellow-200 dark:bg-yellow-600",
+  translationControls: "bg-blue-200 dark:bg-blue-700",
+  translatedText: "bg-purple-200 dark:bg-purple-700",
+};
+
+const componentLabels: Record<string, string> = {
+  transcript: "T",
+  sourceText: "S",
+  translationControls: "C",
+  translatedText: "Tr",
+};
+
+function LayoutDiagram({ layout }: { layout: string[][] }) {
+  // layout is a 2D array: columns of rows
+  // Find the max column height for grid alignment
+  const maxRows = Math.max(...layout.map(col => col.length));
+  return (
+    <div className="flex border border-gray-300 dark:border-gray-700 rounded overflow-hidden mr-2" style={{ minWidth: 48 }}>
+      {layout.map((col, i) => (
+        <div key={i} className="flex flex-col">
+          {Array.from({ length: maxRows }).map((_, j) => {
+            const key = col[j];
+            return key ? (
+              <div
+                key={key + j}
+                className={`w-6 h-6 flex items-center justify-center text-xs font-bold border-b border-r border-gray-200 dark:border-gray-700 ${componentColors[key] || "bg-gray-200"}`}
+                title={key}
+              >
+                {componentLabels[key] || key[0].toUpperCase()}
+              </div>
+            ) : (
+              <div key={"empty" + j} className="w-6 h-6 border-b border-r border-gray-200 dark:border-gray-700 bg-transparent" />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
 import React from 'react';
 import { useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
 import { useRef, useState } from 'react';
@@ -7,15 +49,14 @@ import ProseMirrorEditor from './ProseMirrorEditor';
 import TranslationControls from './TranslationControls';
 
 import { useAtom } from 'jotai';
-import { fontSizeAtom, languageAtom, availableLayouts, selectedLayoutKeyAtom, isEditorAtom } from './configAtoms';
-import ConfigPanel from './ConfigPanel';
+import { fontSizeAtom, availableLayouts, isEditorAtom } from './configAtoms';
 import SpeechTranscriber from './SpeechTranscriber';
 import TranslatedTextViewer from './TranslatedTextViewer';
 import { useAsPlainText } from './yjsUtils';
-
 import { useScrollToBottom } from './reactUtils';
 import { translatedTextKeyForLanguage } from './translationUtils';
 import { useTranslationManager } from './useTranslationManager';
+import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
@@ -49,18 +90,57 @@ function TranscriptViewer() {
 }
 
 
-function AppInner() {
+
+// Home page: list all layouts and languages as links
+function HomePage() {
+  const languages = ["Spanish", "French", "Haitian Creole"];
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
+      <h1 className="text-2xl font-bold mb-6 mt-8">Live Outline: Choose Language & Layout</h1>
+      <div className="flex flex-col gap-6 w-full max-w-xl">
+        {languages.map(lang => (
+          <div key={lang} className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4">
+            <div className="font-semibold mb-2">{lang}</div>
+            <div className="flex flex-col gap-2">
+              {availableLayouts.map(layout => (
+                <div key={layout.key} className="flex items-center gap-2">
+                  <LayoutDiagram layout={layout.layout} />
+                  <Link
+                    to={`/${layout.key}/${encodeURIComponent(lang)}`}
+                    className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
+                  >
+                    {layout.label}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Layout page: render the selected layout and language from URL
+function LayoutPage() {
+  const { layoutKey, language } = useParams();
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
   const sourceTextRef = useRef("");
-  const languages = ["Spanish", "French", "Haitian Creole"];
-  const [displayedLanguage] = useAtom(languageAtom);
-  const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [fontSize] = useAtom(fontSizeAtom);
-  const [selectedLayoutKey] = useAtom(selectedLayoutKeyAtom);
   const [isEditor] = useAtom(isEditorAtom);
+  const navigate = useNavigate();
+  const languages = ["Spanish", "French", "Haitian Creole"];
+
+  // If invalid layout or language, redirect to home
+  const selectedLayoutObj = availableLayouts.find(l => l.key === layoutKey);
+  if (!selectedLayoutObj || !language || !languages.includes(language)) {
+    navigate("/", { replace: true });
+    return null;
+  }
+  const selectedLayout = selectedLayoutObj.layout;
 
   const {
     isTranslating,
@@ -72,15 +152,10 @@ function AppInner() {
     sourceTextRef,
   });
 
-  const selectedLayoutObj = availableLayouts.find(l => l.key === selectedLayoutKey) || availableLayouts[0];
-  const selectedLayout = selectedLayoutObj.layout;
-
   // Derive the set of all possible component keys from the layouts
   type ComponentKey = typeof availableLayouts[number]["layout"][number][number];
-  // Helper type to ensure all keys are present
   type ComponentMapType = { [K in ComponentKey]: () => React.ReactNode };
 
-  // Map component keys to render functions (typechecked)
   const cardClass =
     "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
   const componentMap: ComponentMapType = {
@@ -97,7 +172,7 @@ function AppInner() {
           yDoc={ydoc}
           onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
           editable={isEditor}
-          onTranslationTrigger={doTranslations}
+          onTranslationTrigger={isEditor ? doTranslations: () => null}
         />
       </div>
     ),
@@ -115,17 +190,15 @@ function AppInner() {
     translatedText: () => (
       <div className={cardClass + " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100"}>
         <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight">Translation</h2>
-        <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage)} fontSize={fontSize} />
+        <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(language)} fontSize={fontSize} />
       </div>
     ),
   };
 
   // Render layout columns, filtering out editor-only components at render time if not in editor mode
   const columns = selectedLayout.map((col, i) => {
-    const editorOnlyKeys = ["transcriber", "translationControls"];
-    // If not editor, filter out editor-only components
+    const editorOnlyKeys = ["translationControls"];
     const filteredCol = isEditor ? col : col.filter(key => !editorOnlyKeys.includes(key));
-    // Don't render empty columns
     if (filteredCol.length === 0) return null;
     return (
       <div
@@ -147,15 +220,14 @@ function AppInner() {
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
         <ConnectionStatusWidget connectionStatus={connectionStatus} />
-        <button
-          onClick={() => { setShowConfigPanel(!showConfigPanel); }}
+        <Link
+          to="/"
           className="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 shadow border border-gray-300 dark:border-gray-700 text-xl transition"
-          title="Settings"
+          title="Home"
         >
-          ⚙️
-        </button>
+          🏠
+        </Link>
       </div>
-      {showConfigPanel && <ConfigPanel onClose={() => { setShowConfigPanel(false); }} />}
       {columns}
     </div>
   );
@@ -165,7 +237,6 @@ const App = () => {
   const docId = "doc8";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
-  // Set the atom value for isEditor
   const [, setIsEditor] = useAtom(isEditorAtom);
   React.useEffect(() => {
     setIsEditor(isEditor);
@@ -180,10 +251,13 @@ const App = () => {
     });
     return await response.json();
   };
-  
+
   return (
     <YDocProvider docId={docId} authEndpoint={authEndpoint}>
-      <AppInner />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/:layoutKey/:language" element={<LayoutPage />} />
+      </Routes>
     </YDocProvider>
   );
 };
