@@ -8,13 +8,18 @@ export const useAsPlainText = (name: string): [string, (newText: string) => void
   const sharedText = useText(name);
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const [text, setText] = useState(() => sharedText.toString());
-  
+
+  // Reset text state when name changes
+  useEffect(() => {
+    setText(sharedText.toString());
+  }, [sharedText, name]);
+
   useEffect(() => {
     const observer = () => {
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       setText(sharedText.toString());
     };
-    
+
     sharedText.observe(observer);
     return () => { sharedText.unobserve(observer); };
   }, [sharedText]);
@@ -23,7 +28,7 @@ export const useAsPlainText = (name: string): [string, (newText: string) => void
     setYTextFromString(sharedText, newText);
     // Don't set the state here, as it will be set by the observer
   };
-  
+
   return [text, setPlainText];
 };
 
