@@ -86,6 +86,17 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     }
   }, [setTranslationError, translationCache]);
 
+  const doResetTranslations = useCallback(() => {
+      for (const lang of languages) {
+        const key = translatedTextKeyForLanguage(lang);
+        const text = ydoc.getText(key);
+        if (text) {
+          text.delete(0, text.length);
+        }
+      }
+      translationCache.clear();
+      setTranslationError("");
+  }, [translationCache, ydoc]);
 
   const leftSideShown = isEditor || showOriginalText || showTranscript;
   const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
@@ -111,17 +122,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     <TranslationControls
       translationError={translationError}
       isTranslating={isTranslating}
-      onReset={() => {
-        for (const lang of languages) {
-          const key = translatedTextKeyForLanguage(lang);
-          const text = ydoc.getText(key);
-          if (text) {
-            text.delete(0, text.length);
-          }
-        }
-        translationCache.clear();
-        setTranslationError("");
-      }}
+      onReset={doResetTranslations}
       onTranslate={doTranslations}
     />
   )}
