@@ -72,16 +72,21 @@ function AppInner() {
     sourceTextRef,
   });
 
-  // Use the selected layout directly, but filter out editor-only components at render time
-  // (removed unused editorOnly declaration)
   const selectedLayoutObj = availableLayouts.find(l => l.key === selectedLayoutKey) || availableLayouts[0];
   const selectedLayout = selectedLayoutObj.layout;
 
-  // Map component keys to render functions
-  const componentMap: Record<string, React.ReactNode> = {
-    transcriber: isEditor ? <SpeechTranscriber /> : null,
-    transcript: <div className="flex-1/2 overflow-auto p-4 touch-pan-y"><TranscriptViewer /></div>,
-    sourceText: (
+  // Derive the set of all possible component keys from the layouts
+  type ComponentKey = typeof availableLayouts[number]["layout"][number][number];
+  // Helper type to ensure all keys are present
+  type ComponentMapType = { [K in ComponentKey]: () => React.ReactNode };
+
+  // Map component keys to render functions (typechecked)
+  const componentMap: ComponentMapType = {
+    transcriber: () => isEditor ? <SpeechTranscriber /> : null,
+    transcript: () => (
+      <div className="flex-1/2 overflow-auto p-4 touch-pan-y"><TranscriptViewer /></div>
+    ),
+    sourceText: () => (
       <div className="flex-1/2 overflow-auto p-4">
         <ProseMirrorEditor
           yDoc={ydoc}
@@ -91,7 +96,7 @@ function AppInner() {
         />
       </div>
     ),
-    translationControls: isEditor ? (
+    translationControls: () => isEditor ? (
       <TranslationControls
         translationError={translationError}
         isTranslating={isTranslating}
@@ -99,7 +104,7 @@ function AppInner() {
         onTranslate={doTranslations}
       />
     ) : null,
-    translatedText: (
+    translatedText: () => (
       <div className="bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y" style={{ fontSize: `${fontSize}px` }}>
         <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage)} />
       </div>
@@ -123,7 +128,7 @@ function AppInner() {
         }
       >
         {filteredCol.map((key, j) => (
-          <React.Fragment key={key + j}>{componentMap[key]}</React.Fragment>
+          <React.Fragment key={key + j}>{componentMap[key]()}</React.Fragment>
         ))}
       </div>
     );
