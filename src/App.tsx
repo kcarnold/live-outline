@@ -6,10 +6,10 @@ import ProseMirrorEditor from './ProseMirrorEditor';
 
 import TranslatedTextViewer from './TranslatedTextViewer';
 import { useAtom } from 'jotai';
-import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './configAtoms';
+import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom, languageAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
-import { useAsPlainText, usePlainTextSetter } from './yjsUtils';
+import { setYTextFromString, useAsPlainText } from './yjsUtils';
 import { GenericMap, TranslationCache, getUpdatedTranslation } from './translationUtils';
 import { useScrollToBottom } from './reactUtils';
 
@@ -42,18 +42,18 @@ function TranscriptViewer() {
   </>
 }
 
+
+const translatedTextKeyForLanguage = (language: string) => `translatedText-${language}`;
+
+
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
   const textRef = useRef("");
-  const setTranslatedText = usePlainTextSetter("translatedText");
-  const sharedMeta = useMap("meta");
-  const language = sharedMeta.get("language") as string || "Spanish";
-  const setLanguage = (newLanguage: string) => {
-    sharedMeta.set("language", newLanguage);
-  };
+  const languages = ["Spanish", "French", "Haitian Creole"];
+  const [displayedLanguage] = useAtom(languageAtom);
   const translationCache = useMap("translationCache");
   const [isTranslating, setIsTranslating] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
@@ -65,14 +65,15 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const doTranslations = useCallback(async () => {
     async function doTranslation(language: string) {
       const updatedText = await getUpdatedTranslation(language, translationCache as GenericMap as TranslationCache, textRef.current);
-      setTranslatedText(updatedText);
+      const key = translatedTextKeyForLanguage(language);
+      setYTextFromString(ydoc.getText(key), updatedText);
     }
 
     setIsTranslating(true);
     setTranslationError("");
 
     try {
-      await Promise.all([doTranslation(language)]);
+      await Promise.all(languages.map(language => doTranslation(language)));
     }
     catch (error) {
       console.error("Error during translation:", error);
@@ -81,7 +82,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     finally {
       setIsTranslating(false);
     }
-  }, [language, setTranslationError, setTranslatedText, translationCache]);
+  }, [setTranslationError, translationCache]);
 
 
   const leftSideShown = isEditor || showOriginalText || showTranscript;
@@ -105,22 +106,16 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     </div>
   }
   {isEditor && <div className="flex justify-end p-4 bg-white border-t">
-    {/* Language selector */}
-    <select 
-      className="bg-white text-black font-medium py-2 px-4 rounded mr-2"
-      value={language}
-      onChange={(e) => {
-        setLanguage(e.target.value);
-      }}
-    >
-      <option value="Spanish">Spanish</option>
-      <option value="French">French</option>
-      <option value="Haitian Creole">Haitian Creole</option>
-    </select>
     <button 
       className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
       onClick={() => {
-        setTranslatedText("");
+        for (const lang of languages) {
+          const key = translatedTextKeyForLanguage(lang);
+          const text = ydoc.getText(key);
+          if (text) {
+            text.delete(0, text.length);
+          }
+        }
         translationCache.clear();
         setTranslationError("");
       }}
@@ -160,7 +155,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
             <p>{translationError}</p>
           </div>
           )}
-          <TranslatedTextViewer yJsKey="translatedText" />
+          <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage) } />
       </div>
     </div>
   );

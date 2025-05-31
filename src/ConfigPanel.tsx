@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useAtom } from 'jotai';
-import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom } from './configAtoms';
+import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom, languageAtom } from './configAtoms';
 import CheckboxForAtom from './CheckboxForAtom';
 
 interface ConfigPanelProps {
@@ -10,6 +11,7 @@ interface ConfigPanelProps {
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
   const [fontSize, setFontSize] = useAtom(fontSizeAtom);
+  const [language, setLanguage] = useAtom(languageAtom);
 
   return (
     <div className="absolute right-0 top-14 bg-white shadow-lg rounded-lg p-4 z-20 w-64 border border-gray-200">
@@ -19,11 +21,11 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           ✕
         </button>
       </div>
-      
+
       <div className="mb-4">
         <CheckboxForAtom atom={showOriginalTextAtom} label="Show Original Text" />
       </div>
-      
+
       <div className="mb-4">
         <CheckboxForAtom atom={showTranscriptAtom} label="Show Transcript" />
       </div>
@@ -38,6 +40,19 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
           onChange={(e) => {setFontSize(parseInt(e.target.value))}}
           className="w-full"
         />
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-2">Translation Language</label>
+        <select
+          className="bg-white text-black font-medium py-2 px-4 rounded w-full"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <option value="Spanish">Spanish</option>
+          <option value="French">French</option>
+          <option value="Haitian Creole">Haitian Creole</option>
+        </select>
       </div>
     </div>
   );
