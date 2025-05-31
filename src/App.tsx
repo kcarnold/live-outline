@@ -166,27 +166,29 @@ function LayoutPage() {
       </div>
     ),
     sourceText: () => (
-      <div className={cardClass + " flex-1/2 overflow-auto bg-white/70 dark:bg-gray-900/70"}>
-        <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Source Text</h2>
-        <ProseMirrorEditor
-          yDoc={ydoc}
-          onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
-          editable={isEditor}
-          onTranslationTrigger={isEditor ? doTranslations: () => null}
-        />
-      </div>
-    ),
-    translationControls: () =>
-      isEditor ? (
-        <div className={cardClass + " flex justify-center min-h-[36px]"}>
-          <TranslationControls
-            translationError={translationError}
-            isTranslating={isTranslating}
-            onReset={doResetTranslations}
-            onTranslate={doTranslations}
+      <>
+        <div className={cardClass + " flex-1/2 overflow-auto bg-white/70 dark:bg-gray-900/70"}>
+          <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Source Text</h2>
+          <ProseMirrorEditor
+            yDoc={ydoc}
+            onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
+            editable={isEditor}
+            onTranslationTrigger={isEditor ? doTranslations: () => null}
           />
         </div>
-      ) : null,
+        {isEditor ? (
+          <div className={cardClass + " flex justify-center min-h-[36px]"}>
+            <TranslationControls
+              translationError={translationError}
+              isTranslating={isTranslating}
+              onReset={doResetTranslations}
+              onTranslate={doTranslations}
+            />
+          </div>
+        ) : null
+        }
+      </>
+    ),
     translatedText: () => (
       <div className={cardClass + " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100"}>
         <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight">Translation</h2>
@@ -197,9 +199,7 @@ function LayoutPage() {
 
   // Render layout columns, filtering out editor-only components at render time if not in editor mode
   const columns = selectedLayout.map((col, i) => {
-    const editorOnlyKeys = ["translationControls"];
-    const filteredCol = isEditor ? col : col.filter(key => !editorOnlyKeys.includes(key));
-    if (filteredCol.length === 0) return null;
+    if (col.length === 0) return null;
     return (
       <div
         key={i}
@@ -209,7 +209,7 @@ function LayoutPage() {
             : 'flex flex-col w-full md:w-1/2 h-1/2 md:h-full gap-2 p-1'
         }
       >
-        {filteredCol.map((key, j) => (
+        {col.map((key, j) => (
           <React.Fragment key={key + j}>{componentMap[key]()}</React.Fragment>
         ))}
       </div>

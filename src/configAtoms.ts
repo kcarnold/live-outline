@@ -1,7 +1,6 @@
-// Atom to store whether the app is in editor mode
-export const isEditorAtom = atom(false);
 import { atom } from 'jotai';
 
+export const isEditorAtom = atom(false);
 export const fontSizeAtom = atom(16);
 export const languageAtom = atom<string>("French");
 
@@ -11,7 +10,7 @@ export const availableLayouts = [
     key: 'full',
     label: 'Transcript, Source | Translation',
     layout: [
-      ["transcript", "sourceText", "translationControls"],
+      ["transcript", "sourceText"],
       ["translatedText"]
     ]
   },
@@ -20,7 +19,7 @@ export const availableLayouts = [
     label: 'Transcript | Source Text, Translation',
     layout: [
       ["transcript"],
-      ["sourceText", "translationControls", "translatedText"]
+      ["sourceText", "translatedText"]
     ]
   },
   {
