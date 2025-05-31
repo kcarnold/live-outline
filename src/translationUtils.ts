@@ -233,3 +233,5 @@ export async function getUpdatedTranslation(language: string, translationCache: 
     const translatedText = constructTranslatedText(language, decomposedChunks, translationCache as GenericMap as TranslationCache);
     return translatedText;
 }
+
+export const translatedTextKeyForLanguage = (language: string) => `translatedText-${language}`;

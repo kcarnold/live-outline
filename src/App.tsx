@@ -1,6 +1,6 @@
 import './App.css';
-import { useState, useRef, useCallback } from 'react';
-import { useConnectionStatus, useMap, useYDoc, YDocProvider } from '@y-sweet/react';
+import { useState, useRef } from 'react';
+import { useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
 
 
 import ProseMirrorEditor from './ProseMirrorEditor';
@@ -11,9 +11,11 @@ import { useAtom } from 'jotai';
 import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom, languageAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
-import { setYTextFromString, useAsPlainText } from './yjsUtils';
-import { GenericMap, TranslationCache, getUpdatedTranslation } from './translationUtils';
+import { useAsPlainText } from './yjsUtils';
+
+import { useTranslationManager } from './useTranslationManager';
 import { useScrollToBottom } from './reactUtils';
+import { translatedTextKeyForLanguage } from './translationUtils';
 
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
@@ -45,9 +47,6 @@ function TranscriptViewer() {
 }
 
 
-const translatedTextKeyForLanguage = (language: string) => `translatedText-${language}`;
-
-
 function AppInner({isEditor}: {isEditor: boolean}) {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
@@ -56,47 +55,21 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const textRef = useRef("");
   const languages = ["Spanish", "French", "Haitian Creole"];
   const [displayedLanguage] = useAtom(languageAtom);
-  const translationCache = useMap("translationCache");
-  const [isTranslating, setIsTranslating] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
-  const [translationError, setTranslationError] = useState("");
   const [showOriginalText] = useAtom(showOriginalTextAtom);
   const [fontSize] = useAtom(fontSizeAtom);
   const [showTranscript] = useAtom(showTranscriptAtom);
 
-  const doTranslations = useCallback(async () => {
-    async function doTranslation(language: string) {
-      const updatedText = await getUpdatedTranslation(language, translationCache as GenericMap as TranslationCache, textRef.current);
-      const key = translatedTextKeyForLanguage(language);
-      setYTextFromString(ydoc.getText(key), updatedText);
-    }
 
-    setIsTranslating(true);
-    setTranslationError("");
-
-    try {
-      await Promise.all(languages.map(language => doTranslation(language)));
-    }
-    catch (error) {
-      console.error("Error during translation:", error);
-      setTranslationError(error instanceof Error ? error.message : "Unknown error");
-    }
-    finally {
-      setIsTranslating(false);
-    }
-  }, [setTranslationError, translationCache]);
-
-  const doResetTranslations = useCallback(() => {
-      for (const lang of languages) {
-        const key = translatedTextKeyForLanguage(lang);
-        const text = ydoc.getText(key);
-        if (text) {
-          text.delete(0, text.length);
-        }
-      }
-      translationCache.clear();
-      setTranslationError("");
-  }, [translationCache, ydoc]);
+  const {
+    isTranslating,
+    translationError,
+    doTranslations,
+    doResetTranslations,
+  } = useTranslationManager({
+    languages,
+    textRef,
+  });
 
   const leftSideShown = isEditor || showOriginalText || showTranscript;
   const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
