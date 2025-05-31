@@ -5,10 +5,10 @@ import { GenericMap, TranslationCache, getUpdatedTranslation, translatedTextKeyF
 
 export function useTranslationManager({
   languages,
-  textRef
+  sourceTextRef
 }: {
   languages: string[];
-  textRef: React.RefObject<string>;
+  sourceTextRef: React.RefObject<string>;
 }) {
   const ydoc = useYDoc();
   const translationCache = useMap('translationCache');
@@ -20,7 +20,7 @@ export function useTranslationManager({
       const updatedText = await getUpdatedTranslation(
         language,
         translationCache as GenericMap as TranslationCache,
-        textRef.current
+        sourceTextRef.current
       );
       const key = translatedTextKeyForLanguage(language);
       setYTextFromString(ydoc.getText(key), updatedText);
@@ -37,7 +37,7 @@ export function useTranslationManager({
     } finally {
       setIsTranslating(false);
     }
-  }, [languages, setTranslationError, translationCache, textRef, ydoc]);
+  }, [languages, setTranslationError, translationCache, sourceTextRef, ydoc]);
 
   const doResetTranslations = useCallback(() => {
     for (const lang of languages) {

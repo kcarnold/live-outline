@@ -6,7 +6,7 @@ import ProseMirrorEditor from './ProseMirrorEditor';
 import TranslationControls from './TranslationControls';
 
 import { useAtom } from 'jotai';
-import { fontSizeAtom, languageAtom, showOriginalTextAtom, showTranscriptAtom } from './configAtoms';
+import { fontSizeAtom, languageAtom, showSourceTextAtom, showTranscriptAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
 import TranslatedTextViewer from './TranslatedTextViewer';
@@ -53,11 +53,11 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
-  const textRef = useRef("");
+  const sourceTextRef = useRef("");
   const languages = ["Spanish", "French", "Haitian Creole"];
   const [displayedLanguage] = useAtom(languageAtom);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
-  const [showOriginalText] = useAtom(showOriginalTextAtom);
+  const [showSourceText] = useAtom(showSourceTextAtom);
   const [fontSize] = useAtom(fontSizeAtom);
   const [showTranscript] = useAtom(showTranscriptAtom);
 
@@ -69,10 +69,10 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     doResetTranslations,
   } = useTranslationManager({
     languages,
-    textRef,
+    sourceTextRef,
   });
 
-  const leftSideShown = isEditor || showOriginalText || showTranscript;
+  const leftSideShown = isEditor || showSourceText || showTranscript;
   const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
 
   const leftContent = <>
@@ -82,11 +82,11 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       <TranscriptViewer />
     </div>
   }
-  {showOriginalText && 
+  {showSourceText && 
     <div className="flex-1/2 overflow-auto p-4">
       <ProseMirrorEditor
         yDoc={ydoc}
-        onTextChanged={isEditor ? (val => { textRef.current = val; }) : () => null}
+        onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
         editable={isEditor}
         onTranslationTrigger={doTranslations}
       />

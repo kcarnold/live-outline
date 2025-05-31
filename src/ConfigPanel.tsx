@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAtom } from 'jotai';
-import { showOriginalTextAtom, fontSizeAtom, showTranscriptAtom, languageAtom } from './configAtoms';
+import { fontSizeAtom, showTranscriptAtom, languageAtom, showSourceTextAtom } from './configAtoms';
 import CheckboxForAtom from './CheckboxForAtom';
 
 interface ConfigPanelProps {
@@ -23,7 +23,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
       </div>
 
       <div className="mb-4">
-        <CheckboxForAtom atom={showOriginalTextAtom} label="Show Original Text" />
+        <CheckboxForAtom atom={showSourceTextAtom} label="Show Source Text" />
       </div>
 
       <div className="mb-4">
