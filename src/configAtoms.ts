@@ -11,7 +11,7 @@ export const availableLayouts = [
     key: 'full',
     label: 'Transcript, Source | Translation',
     layout: [
-      ["transcriber", "transcript", "sourceText", "translationControls"],
+      ["transcript", "sourceText", "translationControls"],
       ["translatedText"]
     ]
   },

@@ -84,15 +84,9 @@ function AppInner() {
   const cardClass =
     "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
   const componentMap: ComponentMapType = {
-    transcriber: () =>
-      isEditor ? (
-        <div className={cardClass + " min-h-[48px] flex items-center justify-center bg-gray-200/70 dark:bg-gray-700/70"}>
-          <SpeechTranscriber />
-        </div>
-      ) : null,
     transcript: () => (
       <div className={cardClass + " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60 text-black dark:text-gray-200"}>
-        <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Transcript</h2>
+        {isEditor ? <SpeechTranscriber /> : <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Transcript</h2>}
         <TranscriptViewer />
       </div>
     ),

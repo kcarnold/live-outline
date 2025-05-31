@@ -100,18 +100,17 @@ function SpeechTranscriber() {
     recorder.current = null;
   }
 
-
-  return (
-    <div>
-      <div className="">
-        {isRecording ? (
-            <button className="bg-red-500 text-white font-medium py-1 px-2 rounded-md hover:bg-red-600" onClick={endTranscription}>Stop transcription</button>
-        ) : (
-          <button className="bg-green-500 text-white font-medium py-1 px-2 rounded-md hover:bg-green-600" onClick={startTranscription}>Start transcription</button>
-        )}
-      </div>
-    </div>
-  );
+  if (isRecording) {
+    return <button
+      className="bg-red-500 text-white font-medium py-1 px-2 rounded-md hover:bg-red-600"
+      onClick={endTranscription}>Stop transcription
+    </button>;
+  } else {
+    return <button
+      className="bg-green-500 text-white font-medium py-1 px-2 rounded-md hover:bg-green-600"
+      onClick={startTranscription}>Start transcription
+    </button>;
+  }
 }
 
 export default SpeechTranscriber;
