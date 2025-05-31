@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { useAtom } from 'jotai';
-import { fontSizeAtom, showTranscriptAtom, languageAtom, showSourceTextAtom } from './configAtoms';
-import CheckboxForAtom from './CheckboxForAtom';
+import { fontSizeAtom, languageAtom, availableLayouts, selectedLayoutKeyAtom, isEditorAtom } from './configAtoms';
+
 
 interface ConfigPanelProps {
   onClose: () => void;
@@ -12,6 +12,22 @@ interface ConfigPanelProps {
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
   const [fontSize, setFontSize] = useAtom(fontSizeAtom);
   const [language, setLanguage] = useAtom(languageAtom);
+  const [selectedLayoutKey, setSelectedLayoutKey] = useAtom(selectedLayoutKeyAtom);
+
+  // Only show layouts that make sense for the current mode
+  const [isEditor] = useAtom(isEditorAtom);
+  // For each layout, filter out editor-only components if not in editor mode
+  const editorOnly = ["transcriber", "sourceText", "translationControls"];
+  const filteredLayouts = availableLayouts.map(layoutObj => {
+    let filtered = layoutObj.layout;
+    if (!isEditor) {
+      filtered = layoutObj.layout.map(col => col.filter(key => !editorOnly.includes(key)));
+    }
+    return {
+      ...layoutObj,
+      layout: filtered,
+    };
+  });
 
   return (
     <div className="absolute right-0 top-14 bg-white shadow-lg rounded-lg p-4 z-20 w-64 border border-gray-200">
@@ -22,12 +38,18 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose }) => {
         </button>
       </div>
 
-      <div className="mb-4">
-        <CheckboxForAtom atom={showSourceTextAtom} label="Show Source Text" />
-      </div>
 
       <div className="mb-4">
-        <CheckboxForAtom atom={showTranscriptAtom} label="Show Transcript" />
+        <label className="block mb-2">Layout</label>
+        <select
+          className="bg-white text-black font-medium py-2 px-4 rounded w-full"
+          value={selectedLayoutKey}
+          onChange={e => setSelectedLayoutKey(e.target.value)}
+        >
+          {filteredLayouts.map(l => (
+            <option key={l.key} value={l.key}>{l.label}</option>
+          ))}
+        </select>
       </div>
 
       <div className="mb-4">

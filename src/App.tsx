@@ -1,3 +1,4 @@
+import React from 'react';
 import { useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
 import { useRef, useState } from 'react';
 import './App.css';
@@ -6,7 +7,7 @@ import ProseMirrorEditor from './ProseMirrorEditor';
 import TranslationControls from './TranslationControls';
 
 import { useAtom } from 'jotai';
-import { fontSizeAtom, languageAtom, showSourceTextAtom, showTranscriptAtom } from './configAtoms';
+import { fontSizeAtom, languageAtom, availableLayouts, selectedLayoutKeyAtom, isEditorAtom } from './configAtoms';
 import ConfigPanel from './ConfigPanel';
 import SpeechTranscriber from './SpeechTranscriber';
 import TranslatedTextViewer from './TranslatedTextViewer';
@@ -48,7 +49,7 @@ function TranscriptViewer() {
 }
 
 
-function AppInner({isEditor}: {isEditor: boolean}) {
+function AppInner() {
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
@@ -57,10 +58,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   const languages = ["Spanish", "French", "Haitian Creole"];
   const [displayedLanguage] = useAtom(languageAtom);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
-  const [showSourceText] = useAtom(showSourceTextAtom);
   const [fontSize] = useAtom(fontSizeAtom);
-  const [showTranscript] = useAtom(showTranscriptAtom);
-
+  const [selectedLayoutKey] = useAtom(selectedLayoutKeyAtom);
+  const [isEditor] = useAtom(isEditorAtom);
 
   const {
     isTranslating,
@@ -72,35 +72,62 @@ function AppInner({isEditor}: {isEditor: boolean}) {
     sourceTextRef,
   });
 
-  const leftSideShown = isEditor || showSourceText || showTranscript;
-  const translationLayoutClasses = leftSideShown ? `w-full md:w-1/2 h-1/2 md:h-full` : `w-full h-full`;
+  // Use the selected layout directly, but filter out editor-only components at render time
+  // (removed unused editorOnly declaration)
+  const selectedLayoutObj = availableLayouts.find(l => l.key === selectedLayoutKey) || availableLayouts[0];
+  const selectedLayout = selectedLayoutObj.layout;
 
-  const leftContent = <>
-  {isEditor && <SpeechTranscriber />}
-  {showTranscript &&
-    <div className="flex-1/2 overflow-auto p-4 touch-pan-y">
-      <TranscriptViewer />
-    </div>
-  }
-  {showSourceText && 
-    <div className="flex-1/2 overflow-auto p-4">
-      <ProseMirrorEditor
-        yDoc={ydoc}
-        onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
-        editable={isEditor}
-        onTranslationTrigger={doTranslations}
+  // Map component keys to render functions
+  const componentMap: Record<string, React.ReactNode> = {
+    transcriber: isEditor ? <SpeechTranscriber /> : null,
+    transcript: <div className="flex-1/2 overflow-auto p-4 touch-pan-y"><TranscriptViewer /></div>,
+    sourceText: (
+      <div className="flex-1/2 overflow-auto p-4">
+        <ProseMirrorEditor
+          yDoc={ydoc}
+          onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
+          editable={isEditor}
+          onTranslationTrigger={doTranslations}
+        />
+      </div>
+    ),
+    translationControls: isEditor ? (
+      <TranslationControls
+        translationError={translationError}
+        isTranslating={isTranslating}
+        onReset={doResetTranslations}
+        onTranslate={doTranslations}
       />
-    </div>
-  }
-  {isEditor && (
-    <TranslationControls
-      translationError={translationError}
-      isTranslating={isTranslating}
-      onReset={doResetTranslations}
-      onTranslate={doTranslations}
-    />
-  )}
-  </>;
+    ) : null,
+    translatedText: (
+      <div className="bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y" style={{ fontSize: `${fontSize}px` }}>
+        <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage)} />
+      </div>
+    ),
+  };
+
+  // Render layout columns, filtering out editor-only components at render time if not in editor mode
+  const columns = selectedLayout.map((col, i) => {
+    const editorOnlyKeys = ["transcriber", "translationControls"];
+    // If not editor, filter out editor-only components
+    const filteredCol = isEditor ? col : col.filter(key => !editorOnlyKeys.includes(key));
+    // Don't render empty columns
+    if (filteredCol.length === 0) return null;
+    return (
+      <div
+        key={i}
+        className={
+          selectedLayout.length === 1
+            ? 'w-full h-full'
+            : 'flex flex-col w-full md:w-1/2 h-1/2 md:h-full'
+        }
+      >
+        {filteredCol.map((key, j) => (
+          <React.Fragment key={key + j}>{componentMap[key]}</React.Fragment>
+        ))}
+      </div>
+    );
+  });
 
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
@@ -115,12 +142,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         </button>
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => { setShowConfigPanel(false); }} />}
-      {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
-        {leftContent}
-      </div>}
-      <div className={`${translationLayoutClasses} bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y`} style={{ fontSize: `${fontSize}px` }}>
-          <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage) } />
-      </div>
+      {columns}
     </div>
   );
 }
@@ -129,6 +151,11 @@ const App = () => {
   const docId = "doc8";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
+  // Set the atom value for isEditor
+  const [, setIsEditor] = useAtom(isEditorAtom);
+  React.useEffect(() => {
+    setIsEditor(isEditor);
+  }, [isEditor, setIsEditor]);
   const authEndpoint = async () => {
     const response = await fetch('/api/ys-auth', {
       method: 'POST',
@@ -142,7 +169,7 @@ const App = () => {
   
   return (
     <YDocProvider docId={docId} authEndpoint={authEndpoint}>
-      <AppInner isEditor={isEditor} />
+      <AppInner />
     </YDocProvider>
   );
 };
