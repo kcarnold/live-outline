@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useMemo } from 'react';
+import * as production from 'react/jsx-runtime'; // Required by rehype-react
 import { useScrollToBottom } from './reactUtils';
 import { useAsPlainText } from './yjsUtils';
 import { remarkEmphasizeNewNodes } from './remarkEmphasizeNewNodes';
@@ -25,21 +26,14 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fon
   // Only process once: update prevTextHashes after renderedTree is created
   const renderedTree = useMemo(() => {
     const currentTextHashes = new Set<string>();
+    if (translatedText.length === 0) {
+      return { tree: <div className="text-gray-500 italic">No translated text available</div>, currentTextHashes };
+    }
     const tree = unified()
       .use(remarkParse)
       .use(remarkEmphasizeNewNodes, { prevTextHashes: prevTextHashesRef.current, currentTextHashes })
       .use(remarkRehype)
-      .use(rehypeReact, {
-        createElement: (type: any, props: any, ...children: any[]) => {
-          if (props && props['data-isnew']) {
-            props.className = (props.className ? props.className + ' ' : '') + 'new-element';
-          }
-          if (props && props['data-isnew'] !== undefined) {
-            delete props['data-isnew'];
-          }
-          return React.createElement(type, props, ...children);
-        },
-      })
+      .use(rehypeReact, production)
       .processSync(translatedText).result as React.ReactNode;
     return { tree, currentTextHashes };
   }, [translatedText]);
