@@ -42,10 +42,10 @@ function TranscriptViewer() {
   useScrollToBottom(transcriptEndRef, [transcript]);
 
   const transcriptWithoutPunctuation = transcript.replace(/[.,]/g, '');
-  return <>
+  return <div className="overflow-auto pb-4 leading-tight">
       {transcriptWithoutPunctuation.split('\n').map((x, i) => <div key={i}>{x}</div>)}
       <div ref={transcriptEndRef} />
-  </>
+  </div>
 }
 
 
@@ -81,13 +81,24 @@ function AppInner() {
   type ComponentMapType = { [K in ComponentKey]: () => React.ReactNode };
 
   // Map component keys to render functions (typechecked)
+  const cardClass =
+    "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
   const componentMap: ComponentMapType = {
-    transcriber: () => isEditor ? <SpeechTranscriber /> : null,
+    transcriber: () =>
+      isEditor ? (
+        <div className={cardClass + " min-h-[48px] flex items-center justify-center bg-gray-200/70 dark:bg-gray-700/70"}>
+          <SpeechTranscriber />
+        </div>
+      ) : null,
     transcript: () => (
-      <div className="flex-1/2 overflow-auto p-4 touch-pan-y"><TranscriptViewer /></div>
+      <div className={cardClass + " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60"}>
+        <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Transcript</h2>
+        <TranscriptViewer />
+      </div>
     ),
     sourceText: () => (
-      <div className="flex-1/2 overflow-auto p-4">
+      <div className={cardClass + " flex-1/2 overflow-auto bg-white/70 dark:bg-gray-900/70"}>
+        <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Source Text</h2>
         <ProseMirrorEditor
           yDoc={ydoc}
           onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
@@ -96,16 +107,20 @@ function AppInner() {
         />
       </div>
     ),
-    translationControls: () => isEditor ? (
-      <TranslationControls
-        translationError={translationError}
-        isTranslating={isTranslating}
-        onReset={doResetTranslations}
-        onTranslate={doTranslations}
-      />
-    ) : null,
+    translationControls: () =>
+      isEditor ? (
+        <div className={cardClass + " bg-gray-200/70 dark:bg-gray-700/70 flex items-center justify-center min-h-[36px]"}>
+          <TranslationControls
+            translationError={translationError}
+            isTranslating={isTranslating}
+            onReset={doResetTranslations}
+            onTranslate={doTranslations}
+          />
+        </div>
+      ) : null,
     translatedText: () => (
-      <div className="flex-1/2 bg-red-950 text-white p-2 touch-pan-y">
+      <div className={cardClass + " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100"}>
+        <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight">Translation</h2>
         <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage)} fontSize={fontSize} />
       </div>
     ),
@@ -123,8 +138,8 @@ function AppInner() {
         key={i}
         className={
           selectedLayout.length === 1
-            ? 'w-full h-full'
-            : 'flex flex-col w-full md:w-1/2 h-1/2 md:h-full'
+            ? 'w-full h-full flex flex-col gap-2 p-2'
+            : 'flex flex-col w-full md:w-1/2 h-1/2 md:h-full gap-2 p-1'
         }
       >
         {filteredCol.map((key, j) => (
@@ -135,12 +150,12 @@ function AppInner() {
   });
 
   return (
-    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
+    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
         <ConnectionStatusWidget connectionStatus={connectionStatus} />
         <button
           onClick={() => { setShowConfigPanel(!showConfigPanel); }}
-          className="bg-gray-200 p-1 rounded-full hover:bg-gray-300"
+          className="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 shadow border border-gray-300 dark:border-gray-700 text-xl transition"
           title="Settings"
         >
           ⚙️
