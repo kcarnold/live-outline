@@ -43,6 +43,10 @@
     margin: 0.5em 0;
   }
   ul p { margin: initial; }
+
+  .new-element {
+    @apply bg-yellow-200 dark:bg-yellow-800;
+  }
 }
 
 @layer components {

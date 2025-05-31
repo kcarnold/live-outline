@@ -1,22 +1,58 @@
-import React, { useRef } from 'react';
-import { Remark } from 'react-remark';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useScrollToBottom } from './reactUtils';
 import { useAsPlainText } from './yjsUtils';
+import { remarkEmphasizeNewNodes } from './remarkEmphasizeNewNodes';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import rehypeReact from 'rehype-react';
+
 
 interface TranslatedTextViewerProps {
   yJsKey: string;
   fontSize?: number;
 }
 
+
 const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fontSize }) => {
   const [translatedText] = useAsPlainText(yJsKey);
+  // Use a ref to avoid infinite update loop
+  const prevTextHashesRef = useRef<Set<string>>(new Set());
   const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
+
   useScrollToBottom(translatedTextEndRef, [translatedText]);
+
+  // Only process once: update prevTextHashes after renderedTree is created
+  const renderedTree = useMemo(() => {
+    const currentTextHashes = new Set<string>();
+    const tree = unified()
+      .use(remarkParse)
+      .use(remarkEmphasizeNewNodes, { prevTextHashes: prevTextHashesRef.current, currentTextHashes })
+      .use(remarkRehype)
+      .use(rehypeReact, {
+        createElement: (type: any, props: any, ...children: any[]) => {
+          if (props && props['data-isnew']) {
+            props.className = (props.className ? props.className + ' ' : '') + 'new-element';
+          }
+          if (props && props['data-isnew'] !== undefined) {
+            delete props['data-isnew'];
+          }
+          return React.createElement(type, props, ...children);
+        },
+      })
+      .processSync(translatedText).result as React.ReactNode;
+    return { tree, currentTextHashes };
+  }, [translatedText]);
+
+  useEffect(() => {
+    prevTextHashesRef.current = renderedTree.currentTextHashes;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderedTree]);
+
+
   return (
     <div className="overflow-auto pb-16" style={fontSize ? { fontSize: `${fontSize}px` } : undefined}>
-      <Remark>
-        {translatedText}
-      </Remark>
+      {renderedTree.tree}
       <div ref={translatedTextEndRef} />
     </div>
   );
