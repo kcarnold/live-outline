@@ -22,46 +22,47 @@ function SpeechTranscriber() {
   };
 
   const startTranscription = async () => {
-    realtimeTranscriber.current = new RealtimeTranscriber({
-      token: await getToken(),
-      sampleRate: 16_000,
-    });
-
-    const texts = new Map<number, string>();
-    realtimeTranscriber.current.on('transcript', transcript => {
-      let msg = '';
-      if (transcript.text === '') {
-        return;
-      }
-      console.log(transcript)
-      texts.set(transcript.audio_start, transcript.text);
-      const keys = Array.from(texts.keys());
-      keys.sort((a, b) => a - b);
-      for (const key of keys) {
-        const text = texts.get(key);
-        if (text) {
-          msg += `\n${text}`
-        }
-      }
-      setTranscript(msg);
-    });
-
-    realtimeTranscriber.current.on('error', event => {
-      console.error(event);
-      if (realtimeTranscriber.current)
-        realtimeTranscriber.current.close();
-      realtimeTranscriber.current = null;
-    });
-
-    realtimeTranscriber.current.on('close', (code, reason) => {
-      console.log(`Connection closed: ${code} ${reason}`);
-      realtimeTranscriber.current = null;
-    });
-
-    await realtimeTranscriber.current.connect();
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      realtimeTranscriber.current = new RealtimeTranscriber({
+        token: await getToken(),
+        sampleRate: 16_000,
+      });
+
+      const texts = new Map<number, string>();
+      realtimeTranscriber.current.on('transcript', transcript => {
+        let msg = '';
+        if (transcript.text === '') {
+          return;
+        }
+        console.log(transcript)
+        texts.set(transcript.audio_start, transcript.text);
+        const keys = Array.from(texts.keys());
+        keys.sort((a, b) => a - b);
+        for (const key of keys) {
+          const text = texts.get(key);
+          if (text) {
+            msg += `\n${text}`
+          }
+        }
+        setTranscript(msg);
+      });
+
+      realtimeTranscriber.current.on('error', event => {
+        console.error(event);
+        if (realtimeTranscriber.current)
+          realtimeTranscriber.current.close();
+        realtimeTranscriber.current = null;
+      });
+
+      realtimeTranscriber.current.on('close', (code, reason) => {
+        console.log(`Connection closed: ${code} ${reason}`);
+        realtimeTranscriber.current = null;
+      });
+
+      await realtimeTranscriber.current.connect();
+
       recorder.current = new RecordRTC(stream, {
         type: 'audio',
         mimeType: 'audio/webm;codecs=pcm',
