@@ -58,9 +58,9 @@ function HomePage() {
       <div className="flex flex-col gap-6 w-full max-w-xl">
         {availableLayouts.map(layout => (
           <div key={layout.key} className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4">
-            <div className="flex flex-row items-center gap-3 mb-2">
+            <div className="flex flex-col md:flex-row items-center gap-3 mb-2">
               <LayoutDiagram layout={layout.layout} />
-            <div className="flex flex-row gap-2">
+              <div className="flex flex-row gap-2">
               {languages.map(lang => (
                 <div key={lang} className="flex items-center gap-2">
                   <Link
@@ -193,7 +193,7 @@ function LayoutPage() {
 }
 
 const App = () => {
-  const docId = "doc8";
+  const docId = "doc9";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const [, setIsEditor] = useAtom(isEditorAtom);
