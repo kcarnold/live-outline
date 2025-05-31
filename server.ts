@@ -85,6 +85,12 @@ app.post('/api/requestTranslatedBlocks', async (req, res) => {
 const PORT = process.env.PORT || 8000;
 app.set("port", PORT);
 
+
+// Catch-all route to support React Router (client-side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 const server = app.listen(app.get("port"), () => {
   console.log(`Server running on http://localhost:${PORT}`);
 }).on('error', (error) => {
