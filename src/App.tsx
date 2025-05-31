@@ -105,7 +105,7 @@ function AppInner() {
       />
     ) : null,
     translatedText: () => (
-      <div className="bg-red-950 text-white p-2 overflow-auto pb-16 touch-pan-y" style={{ fontSize: `${fontSize}px` }}>
+      <div className="bg-red-950 text-white p-2 touch-pan-y" style={{ fontSize: `${fontSize}px` }}>
         <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(displayedLanguage)} />
       </div>
     ),

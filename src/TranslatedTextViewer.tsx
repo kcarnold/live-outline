@@ -13,7 +13,7 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey }) =
   const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
   useScrollToBottom(translatedTextEndRef, [translatedText]);
   return (
-    <div>
+    <div className="overflow-auto pb-16">
       <Remark>
         {translatedText}
       </Remark>
