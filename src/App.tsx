@@ -19,19 +19,21 @@ import { translatedTextKeyForLanguage } from './translationUtils';
 
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
-  return <div className={`px-1 py-1 rounded-full text-xs font-medium ${
-      connectionStatus === 'connected' 
-        ? 'bg-green-500 text-white' 
-        : connectionStatus === 'connecting' 
-        ? 'bg-yellow-500 text-white' 
+  if (connectionStatus === 'connected') {
+    // Very compact: just a green dot
+    return (
+      <div className="w-3 h-3 bg-green-500 rounded-full border border-white" title="Connected" />
+    );
+  }
+  return (
+    <div className={`px-1 py-1 rounded-full text-xs font-medium ${
+      connectionStatus === 'connecting'
+        ? 'bg-yellow-500 text-white'
         : 'bg-red-500 text-white'
     }`}>
-      {connectionStatus === 'connected' 
-        ? 'Connected' 
-        : connectionStatus === 'connecting' 
-        ? 'Connecting...' 
-        : 'Disconnected'}
-    </div>;
+      {connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+    </div>
+  );
 }
 
 function TranscriptViewer() {
@@ -104,6 +106,7 @@ function AppInner({isEditor}: {isEditor: boolean}) {
   return (
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
+        <ConnectionStatusWidget connectionStatus={connectionStatus} />
         <button
           onClick={() => { setShowConfigPanel(!showConfigPanel); }}
           className="bg-gray-200 p-1 rounded-full hover:bg-gray-300"
@@ -111,7 +114,6 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         >
           ⚙️
         </button>
-        <ConnectionStatusWidget connectionStatus={connectionStatus} />
       </div>
       {showConfigPanel && <ConfigPanel onClose={() => { setShowConfigPanel(false); }} />}
       {(leftSideShown) && <div className="flex flex-col w-full md:w-1/2 h-1/2 md:h-full">
