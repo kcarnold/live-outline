@@ -7,6 +7,21 @@ export const languageAtom = atom<string>("French");
 // Layouts: each is an array of arrays of component keys
 export const availableLayouts = [
   {
+    key: 'transcript-translation',
+    label: 'Transcript | Translation',
+    layout: [
+      ["transcript"],
+      ["translatedText"]
+    ]
+  },
+  {
+    key: 'translation-only',
+    label: 'Translation Only',
+    layout: [
+      ["translatedText"]
+    ]
+  },
+  {
     key: 'full',
     label: 'Transcript, Source | Translation',
     layout: [
@@ -22,21 +37,6 @@ export const availableLayouts = [
       ["sourceText", "translatedText"]
     ]
   },
-  {
-    key: 'transcript-translation',
-    label: 'Transcript | Translation',
-    layout: [
-      ["transcript"],
-      ["translatedText"]
-    ]
-  },
-  {
-    key: 'translation-only',
-    label: 'Translation Only',
-    layout: [
-      ["translatedText"]
-    ]
-  }
 ];
 
-export const selectedLayoutKeyAtom = atom(availableLayouts[2].key);
+export const selectedLayoutKeyAtom = atom(availableLayouts[0].key);

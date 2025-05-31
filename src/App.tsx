@@ -60,19 +60,18 @@ function HomePage() {
           <div key={layout.key} className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4">
             <div className="flex flex-row items-center gap-3 mb-2">
               <LayoutDiagram layout={layout.layout} />
-              <div className="font-semibold">{layout.label}</div>
-            </div>
             <div className="flex flex-row gap-2">
               {languages.map(lang => (
                 <div key={lang} className="flex items-center gap-2">
                   <Link
                     to={`/${layout.key}/${encodeURIComponent(lang)}`}
                     className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
-                  >
+                    >
                     {lang}
                   </Link>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         ))}
