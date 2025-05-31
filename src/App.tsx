@@ -91,7 +91,7 @@ function AppInner() {
         </div>
       ) : null,
     transcript: () => (
-      <div className={cardClass + " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60"}>
+      <div className={cardClass + " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60 text-black dark:text-gray-200"}>
         <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">Transcript</h2>
         <TranscriptViewer />
       </div>
@@ -109,7 +109,7 @@ function AppInner() {
     ),
     translationControls: () =>
       isEditor ? (
-        <div className={cardClass + " bg-gray-200/70 dark:bg-gray-700/70 flex items-center justify-center min-h-[36px]"}>
+        <div className={cardClass + " flex justify-center min-h-[36px]"}>
           <TranslationControls
             translationError={translationError}
             isTranslating={isTranslating}

@@ -15,7 +15,7 @@ const TranslationControls: React.FC<TranslationControlsProps> = ({
   onTranslate,
   disabled = false,
 }) => (
-  <div className="flex justify-end p-4 bg-white border-t">
+  <div className="flex justify-end p-4">
     {translationError !== "" && (
       <div className="p-2 bg-red-800 text-white rounded-md mx-2">
         <b>Translation Error</b>: {translationError}

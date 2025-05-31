@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* @custom-variant dark (&:where(.dark, .dark *)); */
+
 @layer base {
   html, body {
     overscroll-behavior: none;
@@ -45,6 +47,6 @@
 
 @layer components {
   .ProseMirror {
-    @apply border border-gray-300 bg-white;
+    @apply border border-gray-300 bg-white dark:bg-gray-900 dark:text-gray-100;
   }
 }
