@@ -40,4 +40,4 @@ export const availableLayouts = [
   }
 ];
 
-export const selectedLayoutKeyAtom = atom(availableLayouts[0].key);
+export const selectedLayoutKeyAtom = atom(availableLayouts[2].key);
