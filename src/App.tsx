@@ -2,7 +2,9 @@ import './App.css';
 import { useState, useRef, useCallback } from 'react';
 import { useConnectionStatus, useMap, useYDoc, YDocProvider } from '@y-sweet/react';
 
+
 import ProseMirrorEditor from './ProseMirrorEditor';
+import TranslationControls from './TranslationControls';
 
 import TranslatedTextViewer from './TranslatedTextViewer';
 import { useAtom } from 'jotai';
@@ -105,15 +107,11 @@ function AppInner({isEditor}: {isEditor: boolean}) {
       />
     </div>
   }
-  {isEditor && <div className="flex justify-end p-4 bg-white border-t">
-    {(translationError !== "") && (
-      <div className="p-2 bg-red-800 text-white rounded-md mx-2">
-        <b>Translation Error</b>: {translationError}
-      </div>
-    )}
-    <button 
-      className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
-      onClick={() => {
+  {isEditor && (
+    <TranslationControls
+      translationError={translationError}
+      isTranslating={isTranslating}
+      onReset={() => {
         for (const lang of languages) {
           const key = translatedTextKeyForLanguage(lang);
           const text = ydoc.getText(key);
@@ -124,17 +122,9 @@ function AppInner({isEditor}: {isEditor: boolean}) {
         translationCache.clear();
         setTranslationError("");
       }}
-    >
-      Reset
-    </button>
-    <button 
-      className={`text-white font-medium py-2 px-4 rounded transition-colors ${isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-      onClick={doTranslations}
-      disabled={isTranslating}
-    >
-      {isTranslating ? 'Translating...' : 'Translate'}
-    </button>
-  </div> }
+      onTranslate={doTranslations}
+    />
+  )}
   </>;
 
   return (
