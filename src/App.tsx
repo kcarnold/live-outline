@@ -1,5 +1,5 @@
-import { useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
-import React, { useRef } from 'react';
+import { AuthEndpoint, useConnectionStatus, useYDoc, YDocProvider } from '@y-sweet/react';
+import React, { useCallback, useRef } from 'react';
 import './App.css';
 
 import ProseMirrorEditor from './ProseMirrorEditor';
@@ -15,6 +15,7 @@ import TranslatedTextViewer from './TranslatedTextViewer';
 import { translatedTextKeyForLanguage } from './translationUtils';
 import { useTranslationManager } from './useTranslationManager';
 import { useAsPlainText } from './yjsUtils';
+import { ClientToken } from '@y-sweet/sdk';
 
 
 function ConnectionStatusWidget({ connectionStatus }: { connectionStatus: string }) {
@@ -93,14 +94,6 @@ function LayoutPage() {
   const navigate = useNavigate();
   const languages = ["Spanish", "French", "Haitian Creole"];
 
-  // If invalid layout or language, redirect to home
-  const selectedLayoutObj = availableLayouts.find(l => l.key === layoutKey);
-  if (!selectedLayoutObj || !language || !languages.includes(language)) {
-    navigate("/", { replace: true });
-    return null;
-  }
-  const selectedLayout = selectedLayoutObj.layout;
-
   const {
     isTranslating,
     translationError,
@@ -110,6 +103,20 @@ function LayoutPage() {
     languages,
     sourceTextRef,
   });
+
+  const doTranslationsSync = useCallback(() => {
+    doTranslations().catch(err => {
+      console.error("Error during translation:", err);
+    });
+  }, [doTranslations]);
+
+  // If invalid layout or language, redirect to home
+  const selectedLayoutObj = availableLayouts.find(l => l.key === layoutKey);
+  if (!selectedLayoutObj || !language || !languages.includes(language)) {
+    void navigate("/", { replace: true });
+    return null;
+  }
+  const selectedLayout = selectedLayoutObj.layout;
 
   // Derive the set of all possible component keys from the layouts
   type ComponentKey = typeof availableLayouts[number]["layout"][number][number];
@@ -132,7 +139,7 @@ function LayoutPage() {
             yDoc={ydoc}
             onTextChanged={isEditor ? (val => { sourceTextRef.current = val; }) : () => null}
             editable={isEditor}
-            onTranslationTrigger={isEditor ? doTranslations: () => null}
+            onTranslationTrigger={isEditor ? doTranslationsSync: () => null}
           />
         </div>
         {isEditor ? (
@@ -141,7 +148,7 @@ function LayoutPage() {
               translationError={translationError}
               isTranslating={isTranslating}
               onReset={doResetTranslations}
-              onTranslate={doTranslations}
+              onTranslate={doTranslationsSync}
             />
           </div>
         ) : null
@@ -200,7 +207,7 @@ const App = () => {
   React.useEffect(() => {
     setIsEditor(isEditor);
   }, [isEditor, setIsEditor]);
-  const authEndpoint = async () => {
+  const authEndpoint: AuthEndpoint = async () => {
     const response = await fetch('/api/ys-auth', {
       method: 'POST',
       headers: {
@@ -208,7 +215,7 @@ const App = () => {
       },
       body: JSON.stringify({ docId, isEditor }),
     });
-    return await response.json();
+    return await response.json() as ClientToken;
   };
 
   return (
