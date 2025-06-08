@@ -117,7 +117,6 @@ const Player = (props: PlayerProps) => {
 				ref={videoRef}
 				autoPlay
 				muted
-				controls
 				playsInline
 				className={`bg-black max-w-full max-h-full`}
 			/>
