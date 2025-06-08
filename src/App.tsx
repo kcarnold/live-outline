@@ -53,6 +53,7 @@ function TranscriptViewer() {
 // Home page: list all layouts and languages as links
 function HomePage() {
   const languages = ["Spanish", "French", "Haitian Creole"];
+  const defaultLang = languages[0];
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
       <h1 className="text-2xl font-bold mb-6 mt-8">Live Outline: Choose Language & Layout</h1>
@@ -61,18 +62,12 @@ function HomePage() {
           <div key={layout.key} className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4">
             <div className="flex flex-col md:flex-row items-center gap-3 mb-2">
               <LayoutDiagram layout={layout.layout} />
-              <div className="flex flex-row gap-2">
-              {languages.map(lang => (
-                <div key={lang} className="flex items-center gap-2">
-                  <Link
-                    to={`/${layout.key}/${encodeURIComponent(lang)}`}
-                    className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
-                    >
-                    {lang}
-                  </Link>
-                </div>
-              ))}
-              </div>
+              <Link
+                  to={`/${layout.key}/${encodeURIComponent(defaultLang)}`}
+                  className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
+                  >
+                  {layout.label}
+              </Link>
             </div>
           </div>
         ))}
@@ -157,7 +152,18 @@ function LayoutPage() {
     ),
     translatedText: () => (
       <div className={cardClass + " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100 overflow-auto"}>
-        <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight">Translation</h2>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight mb-0">Translation</h2>
+          <select
+            className="ml-2 px-1 py-0.5 rounded text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
+            value={language}
+            onChange={e => void navigate(`/${layoutKey}/${encodeURIComponent(e.target.value)}`)}
+          >
+            {languages.map(lang => (
+              <option key={lang} value={lang}>{lang}</option>
+            ))}
+          </select>
+        </div>
         <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(language)} fontSize={fontSize} />
       </div>
     ),
