@@ -3,11 +3,13 @@ const componentColors: Record<string, string> = {
   transcript: "bg-green-300 dark:bg-green-700",
   sourceText: "bg-yellow-200 dark:bg-yellow-600",
   translatedText: "bg-purple-200 dark:bg-purple-700",
+  video: "bg-blue-200 dark:bg-blue-700",
 };
 const humanLabels: Record<string, string> = {
   transcript: "Transcript",
   sourceText: "Source Text",
   translatedText: "Translated Text",
+  video: "Video",
 };
 
 

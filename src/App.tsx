@@ -72,7 +72,7 @@ function HomePage() {
   const languages = ["Spanish", "French", "Haitian Creole"];
   const defaultLang = languages[0];
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900 text-black dark:text-gray-200">
       <h1 className="text-2xl font-bold mb-6 mt-8">
         Live Outline: Choose Language & Layout
       </h1>
