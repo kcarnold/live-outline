@@ -33,7 +33,7 @@ export const availableLayouts = [
     key: 'transcript-source',
     label: 'Transcript | Source Text, Translation',
     layout: [
-      ["transcript"],
+      ["transcript", "video"],
       ["sourceText", "translatedText"]
     ]
   },
