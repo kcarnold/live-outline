@@ -149,7 +149,7 @@ function LayoutPage() {
       </>
     ),
     translatedText: () => (
-      <div className={cardClass + " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100"}>
+      <div className={cardClass + " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100 overflow-auto"}>
         <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight">Translation</h2>
         <TranslatedTextViewer yJsKey={translatedTextKeyForLanguage(language)} fontSize={fontSize} />
       </div>
