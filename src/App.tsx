@@ -1,10 +1,11 @@
 import {
   AuthEndpoint,
   useConnectionStatus,
+  useMap,
   useYDoc,
   YDocProvider,
 } from "@y-sweet/react";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import "./App.css";
 
 import ProseMirrorEditor from "./ProseMirrorEditor";
@@ -21,6 +22,7 @@ import { translatedTextKeyForLanguage } from "./translationUtils";
 import { useTranslationManager } from "./useTranslationManager";
 import { useAsPlainText } from "./yjsUtils";
 import { ClientToken } from "@y-sweet/sdk";
+import SlidesPlayer from "./SlidesPlayer";
 
 function ConnectionStatusWidget({
   connectionStatus,
@@ -108,6 +110,10 @@ function LayoutPage() {
   const [isEditor] = useAtom(isEditorAtom);
   const navigate = useNavigate();
   const languages = ["Spanish", "French", "Haitian Creole"];
+  const [peerConnectionDisconnected, setPeerConnectionDisconnected] =
+    useState(true);
+  const meta = useMap("meta");
+  const videoVisibility = meta.get("videoVisibility") || "hidden";
 
   const {
     isTranslating,
@@ -227,6 +233,47 @@ function LayoutPage() {
         />
       </div>
     ),
+    video: () => {
+      if (!isEditor && videoVisibility === "hidden") {
+        return null;
+      }
+      return (
+        <div
+          className={
+            cardClass +
+            " flex-1/2 overflow-hidden bg-gray-100/80 dark:bg-gray-900/60"
+          }
+        >
+          {(isEditor || videoVisibility !== "hidden") && (
+            <>
+              {peerConnectionDisconnected && <b>Waiting for video...</b>}
+              {isEditor && (
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <label className="mr-1">
+                    <input
+                      type="checkbox"
+                      checked={videoVisibility !== "hidden"}
+                      onChange={(e) => {
+                        meta.set(
+                          "videoVisibility",
+                          e.target.checked ? "visible" : "hidden"
+                        );
+                      }}
+                    />{" "}
+                    Show Video
+                  </label>
+                </div>
+              )}
+              <SlidesPlayer
+                streamToken={"ncf-live-translation"}
+                apiPath={"https://b.siobud.com/api"}
+                setPeerConnectionDisconnected={setPeerConnectionDisconnected}
+              />
+            </>
+          )}
+        </div>
+      );
+    },
   };
 
   // Render layout columns, filtering out editor-only components at render time if not in editor mode

@@ -11,14 +11,14 @@ export const availableLayouts = [
     label: 'Transcript | Translation',
     layout: [
       ["transcript"],
-      ["translatedText"]
+      ["translatedText", "video"]
     ]
   },
   {
     key: 'translation-only',
     label: 'Translation Only',
     layout: [
-      ["translatedText"]
+      ["video", "translatedText"]
     ]
   },
   {
