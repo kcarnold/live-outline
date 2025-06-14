@@ -28,13 +28,7 @@ function ConnectionStatusWidget({
   connectionStatus: string;
 }) {
   if (connectionStatus === "connected") {
-    // Very compact: just a green dot
-    return (
-      <div
-        className="w-3 h-3 bg-green-500 rounded-full border border-white"
-        title="Connected"
-      />
-    );
+    return null; // Don't show anything if connected
   }
   return (
     <div
@@ -310,14 +304,15 @@ function LayoutPage() {
     <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative touch-none bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900">
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
         <ConnectionStatusWidget connectionStatus={connectionStatus} />
-        <Link
-          to="/"
-          className="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 shadow border border-gray-300 dark:border-gray-700 text-xl transition"
-          title="Home"
-        >
-          🏠
-        </Link>
       </div>
+      <Link
+        to="/"
+        className="fixed bottom-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-gray-500/70 text-white shadow-md hover:bg-gray-700/80 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        title="Home"
+        style={{ fontSize: '1.3rem', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+      >
+        <span style={{ fontSize: '1.3rem', lineHeight: 1 }}>🏠</span>
+      </Link>
       {columns}
     </div>
   );
