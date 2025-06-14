@@ -8,9 +8,10 @@ export const useAsPlainText = (name: string): [string, (newText: string) => void
   const sharedText = useText(name);
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const [text, setText] = useState(() => sharedText.toString());
-
+  
   // Reset text state when name changes
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     setText(sharedText.toString());
   }, [sharedText, name]);
 
@@ -62,6 +63,7 @@ function diffToDelta(diffResult: diff.Diff[]): DeltaOperation[] {
       return { delete: value.length };
     if (op === diff.EQUAL)
       return { retain: value.length };
-    throw new Error('Unknown diff operation: ' + op);
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    throw new Error(`Unknown diff operation: ${op}`);
   });
 }
