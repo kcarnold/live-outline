@@ -7,7 +7,7 @@ export function useTranslationManager({
   languages,
   sourceTextRef
 }: {
-  languages: string[];
+  languages: readonly string[];
   sourceTextRef: React.RefObject<string>;
 }) {
   const ydoc = useYDoc();
