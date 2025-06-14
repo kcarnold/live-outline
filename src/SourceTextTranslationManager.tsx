@@ -51,13 +51,13 @@ export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
             </div>
           )}
           <button
-            className="bg-gray-600 text-white font-medium py-2 px-4 rounded hover:bg-gray-700 transition-colors mr-2"
+            className="bg-gray-600 text-white font-medium py-1 px-2 rounded hover:bg-gray-700 transition-colors mr-2"
             onClick={doResetTranslations}
           >
             Reset
           </button>
           <button
-            className={`text-white font-medium py-2 px-4 rounded transition-colors ${
+            className={`text-white font-medium py-1 px-2 rounded transition-colors ${
               isTranslating
                 ? "bg-blue-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
