@@ -11,7 +11,7 @@ import "./App.css";
 
 import { useAtom, useAtomValue } from "jotai";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { availableLayouts, fontSizeAtom, isEditorAtom, languages } from "./configAtoms";
+import { fontSizeAtom, isEditorAtom, languages } from "./configAtoms";
 import { LayoutDiagram } from "./LayoutDiagram";
 import { useScrollToBottom } from "./reactUtils";
 import SpeechTranscriber from "./SpeechTranscriber";
@@ -65,7 +65,42 @@ function TranscriptViewer() {
   );
 }
 
-// Home page: list all layouts and languages as links
+// Layouts: each is an array of arrays of component keys
+const availableLayouts = [
+  {
+    key: 'translation-only',
+    label: 'Translation Only',
+    layout: [
+      ["video", "translatedText"]
+    ]
+  },
+  {
+    key: 'transcript-translation',
+    label: 'Transcript | Translation',
+    layout: [
+      ["transcript"],
+      ["translatedText", "video"]
+    ]
+  },
+  {
+    key: 'full',
+    label: 'Transcript, Source | Translation',
+    layout: [
+      ["transcript", "sourceText"],
+      ["translatedText", "video"]
+    ]
+  },
+  {
+    key: 'transcript-source',
+    label: 'Transcript | Source Text, Translation',
+    layout: [
+      ["transcript", "video"],
+      ["sourceText", "translatedText"]
+    ]
+  },
+];
+
+
 function HomePage() {
   const defaultLang = languages[0];
   return (
@@ -187,7 +222,7 @@ function LayoutPage() {
           </select>
         </div>
         <TranslatedTextViewer
-          yJsKey={translatedTextKeyForLanguage(language)}
+          yJsKey={translatedTextKeyForLanguage(language!)}
           fontSize={fontSize}
         />
       </div>
