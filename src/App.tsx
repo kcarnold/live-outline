@@ -5,11 +5,9 @@ import {
   useYDoc,
   YDocProvider,
 } from "@y-sweet/react";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import "./App.css";
 
-import ProseMirrorEditor from "./ProseMirrorEditor";
-import TranslationControls from "./TranslationControls";
 
 import { useAtom } from "jotai";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
@@ -19,10 +17,10 @@ import { useScrollToBottom } from "./reactUtils";
 import SpeechTranscriber from "./SpeechTranscriber";
 import TranslatedTextViewer from "./TranslatedTextViewer";
 import { translatedTextKeyForLanguage } from "./translationUtils";
-import { useTranslationManager } from "./useTranslationManager";
 import { useAsPlainText } from "./yjsUtils";
 import { ClientToken } from "@y-sweet/sdk";
 import SlidesPlayer from "./SlidesPlayer";
+import { SourceTextTranslationManager } from "./SourceTextTranslationManager";
 
 function ConnectionStatusWidget({
   connectionStatus,
@@ -112,22 +110,6 @@ function LayoutPage() {
   const meta = useMap("meta");
   const videoVisibility = meta.get("videoVisibility") || "hidden";
 
-  const {
-    isTranslating,
-    translationError,
-    doTranslations,
-    doResetTranslations,
-  } = useTranslationManager({
-    languages,
-    sourceTextRef,
-  });
-
-  const doTranslationsSync = useCallback(() => {
-    doTranslations().catch((err) => {
-      console.error("Error during translation:", err);
-    });
-  }, [doTranslations]);
-
   // If invalid layout or language, redirect to home
   const selectedLayoutObj = availableLayouts.find((l) => l.key === layoutKey);
   if (!selectedLayoutObj || !language || !languages.includes(language)) {
@@ -169,32 +151,10 @@ function LayoutPage() {
             " flex-1/2 overflow-auto bg-white/70 dark:bg-gray-900/70"
           }
         >
-          <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">
-            Source Text
-          </h2>
-          <ProseMirrorEditor
-            yDoc={ydoc}
-            onTextChanged={
-              isEditor
-                ? (val) => {
-                    sourceTextRef.current = val;
-                  }
-                : () => null
-            }
-            editable={isEditor}
-            onTranslationTrigger={isEditor ? doTranslationsSync : () => null}
+          <SourceTextTranslationManager
+            ydoc={ydoc}
           />
         </div>
-        {isEditor ? (
-          <div className={cardClass + " flex justify-center min-h-[36px]"}>
-            <TranslationControls
-              translationError={translationError}
-              isTranslating={isTranslating}
-              onReset={doResetTranslations}
-              onTranslate={doTranslationsSync}
-            />
-          </div>
-        ) : null}
       </>
     ),
     translatedText: () => (
