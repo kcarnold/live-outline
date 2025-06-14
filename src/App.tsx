@@ -106,12 +106,12 @@ function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900 text-black dark:text-gray-200">
       <h1 className="text-2xl font-bold mb-6 mt-8">
-        Live Outline: Choose Language & Layout
+        Choose Language & Layout
       </h1>
       <div className="flex flex-col gap-6 w-full max-w-xl">
         {availableLayouts.map((layout) => {
-          // Convert layout array to human-legible string, e.g. transcript|video,sourceText|translatedText
-          const layoutStr = layout.layout.map(row => row.join("|")).join(",");
+          // Convert layout array to human-legible string, e.g. transcript,video|sourceText,translatedText
+          const layoutStr = layout.layout.map(row => row.join(",")).join("|");
           return (
             <div
               key={layout.key}
@@ -149,10 +149,10 @@ function LayoutPage() {
   const meta = useMap("meta");
   const videoVisibility = meta.get("videoVisibility") || "hidden";
 
-  // Parse layout from URL: e.g. "transcript|slides,chat" => [["transcript", "slides"], ["chat"]]
+  // Parse layout from URL: e.g. "transcript,slides|chat" => [["transcript", "slides"], ["chat"]]
   function parseLayoutString(layoutStr: string | undefined): string[][] {
     if (!layoutStr) return [];
-    return layoutStr.split(",").map(row => row.split("|"));
+    return layoutStr.split("|").map(row => row.split(","));
   }
 
   // Derive the set of all possible component keys from the layouts
