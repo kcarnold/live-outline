@@ -74,22 +74,26 @@ function HomePage() {
         Live Outline: Choose Language & Layout
       </h1>
       <div className="flex flex-col gap-6 w-full max-w-xl">
-        {availableLayouts.map((layout) => (
-          <div
-            key={layout.key}
-            className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4"
-          >
-            <div className="flex flex-col md:flex-row items-center gap-3 mb-2">
-              <LayoutDiagram layout={layout.layout} />
-              <Link
-                to={`/${layout.key}/${encodeURIComponent(defaultLang)}`}
-                className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
-              >
-                {layout.label}
-              </Link>
+        {availableLayouts.map((layout) => {
+          // Convert layout array to human-legible string, e.g. transcript|video,sourceText|translatedText
+          const layoutStr = layout.layout.map(row => row.join("|")).join(",");
+          return (
+            <div
+              key={layout.key}
+              className="bg-white/80 dark:bg-gray-800/80 rounded shadow p-4"
+            >
+              <div className="flex flex-col md:flex-row items-center gap-3 mb-2">
+                <LayoutDiagram layout={layout.layout} />
+                <Link
+                  to={`/${layoutStr}/${encodeURIComponent(defaultLang)}`}
+                  className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
+                >
+                  {layout.label}
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -97,7 +101,7 @@ function HomePage() {
 
 // Layout page: render the selected layout and language from URL
 function LayoutPage() {
-  const { layoutKey, language } = useParams();
+  const { layout, language } = useParams();
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
@@ -110,14 +114,11 @@ function LayoutPage() {
   const meta = useMap("meta");
   const videoVisibility = meta.get("videoVisibility") || "hidden";
 
-  // If invalid layout or language, redirect to home
-  const selectedLayoutObj = availableLayouts.find((l) => l.key === layoutKey);
-  // @ts-expect-error "languages" is a const array
-  if (!selectedLayoutObj || !language || !languages.includes(language)) {
-    void navigate("/", { replace: true });
-    return null;
+  // Parse layout from URL: e.g. "transcript|slides,chat" => [["transcript", "slides"], ["chat"]]
+  function parseLayoutString(layoutStr: string | undefined): string[][] {
+    if (!layoutStr) return [];
+    return layoutStr.split(",").map(row => row.split("|"));
   }
-  const selectedLayout = selectedLayoutObj.layout;
 
   // Derive the set of all possible component keys from the layouts
   type ComponentKey =
@@ -174,7 +175,7 @@ function LayoutPage() {
             value={language}
             onChange={(e) =>
               void navigate(
-                `/${layoutKey}/${encodeURIComponent(e.target.value)}`
+                `/${layout}/${encodeURIComponent(e.target.value)}`
               )
             }
           >
@@ -234,14 +235,31 @@ function LayoutPage() {
     },
   };
 
+    const parsedLayout = parseLayoutString(layout);
+
+  // Ensure that the layout is valid
+  const isValidLayout = parsedLayout.every(
+    (row) =>
+      row.every((key) => Object.keys(componentMap).includes(key))
+  );
+
+  // If anything is wrong with the layout or the language, redirect to home
+  // @ts-expect-error "languages" is a const array
+  if (!isValidLayout || !language || !languages.includes(language)) {
+    void navigate("/", { replace: true });
+    return null;
+  }
+
+
+
   // Render layout columns, filtering out editor-only components at render time if not in editor mode
-  const columns = selectedLayout.map((col, i) => {
+  const columns = parsedLayout.map((col, i) => {
     if (col.length === 0) return null;
     return (
       <div
         key={i}
         className={
-          selectedLayout.length === 1
+          parsedLayout.length === 1
             ? "w-full h-full flex flex-col gap-2 p-2"
             : "flex flex-col w-full md:w-1/2 h-1/2 md:h-full gap-2 p-1"
         }
@@ -293,7 +311,7 @@ const App = () => {
     <YDocProvider docId={docId} authEndpoint={authEndpoint}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/:layoutKey/:language" element={<LayoutPage />} />
+        <Route path="/:layout/:language" element={<LayoutPage />} />
       </Routes>
     </YDocProvider>
   );
