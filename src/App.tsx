@@ -13,7 +13,7 @@ import TranslationControls from "./TranslationControls";
 
 import { useAtom } from "jotai";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { availableLayouts, fontSizeAtom, isEditorAtom } from "./configAtoms";
+import { availableLayouts, fontSizeAtom, isEditorAtom, languages } from "./configAtoms";
 import { LayoutDiagram } from "./LayoutDiagram";
 import { useScrollToBottom } from "./reactUtils";
 import SpeechTranscriber from "./SpeechTranscriber";
@@ -69,7 +69,6 @@ function TranscriptViewer() {
 
 // Home page: list all layouts and languages as links
 function HomePage() {
-  const languages = ["Spanish", "French", "Haitian Creole"];
   const defaultLang = languages[0];
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-950 dark:to-gray-900 text-black dark:text-gray-200">
@@ -105,11 +104,9 @@ function LayoutPage() {
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
-  const sourceTextRef = useRef("");
   const [fontSize] = useAtom(fontSizeAtom);
   const [isEditor] = useAtom(isEditorAtom);
   const navigate = useNavigate();
-  const languages = ["Spanish", "French", "Haitian Creole"];
   const [peerConnectionDisconnected, setPeerConnectionDisconnected] =
     useState(true);
   const meta = useMap("meta");
