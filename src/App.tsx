@@ -9,7 +9,7 @@ import React, { useRef, useState } from "react";
 import "./App.css";
 
 
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { availableLayouts, fontSizeAtom, isEditorAtom, languages } from "./configAtoms";
 import { LayoutDiagram } from "./LayoutDiagram";
@@ -102,8 +102,8 @@ function LayoutPage() {
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
-  const [fontSize] = useAtom(fontSizeAtom);
-  const [isEditor] = useAtom(isEditorAtom);
+  const fontSize = useAtomValue(fontSizeAtom);
+  const isEditor = useAtomValue(isEditorAtom);
   const navigate = useNavigate();
   const [peerConnectionDisconnected, setPeerConnectionDisconnected] =
     useState(true);
@@ -112,6 +112,7 @@ function LayoutPage() {
 
   // If invalid layout or language, redirect to home
   const selectedLayoutObj = availableLayouts.find((l) => l.key === layoutKey);
+  // @ts-expect-error "languages" is a const array
   if (!selectedLayoutObj || !language || !languages.includes(language)) {
     void navigate("/", { replace: true });
     return null;
