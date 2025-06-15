@@ -141,7 +141,7 @@ function LayoutPage() {
   const [peerConnectionDisconnected, setPeerConnectionDisconnected] =
     useState(true);
   const meta = useMap("meta");
-  const videoVisibility = meta.get("videoVisibility") || "hidden";
+  const videoVisibility = meta.get("videoVisibility") || "visible";
 
   // Parse layout from URL: e.g. "transcript,slides|chat" => [["transcript", "slides"], ["chat"]]
   function parseLayoutString(layoutStr: string | undefined): string[][] {
