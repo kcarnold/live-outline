@@ -19,6 +19,7 @@ import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { redo, undo, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
 
 import { gapCursor } from "prosemirror-gapcursor";
+import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
 
 
