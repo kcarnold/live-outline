@@ -45,7 +45,7 @@ const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger
   }
   , [onTranslationTrigger]);
 
-  const [editorState, setEditorState] = useState(
+  const [editorState, setEditorState] = useState(() => 
     EditorState.create({ schema, plugins: [
       reactKeys(),
       ySyncPlugin(yXmlFragment),
