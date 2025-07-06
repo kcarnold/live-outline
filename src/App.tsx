@@ -281,7 +281,7 @@ function LayoutPage() {
 
 
 
-  // Render layout columns, filtering out editor-only components at render time if not in editor mode
+  // Render layout columns
   const columns = parsedLayout.map((col, i) => {
     if (col.length === 0) return null;
     return (
@@ -319,7 +319,7 @@ function LayoutPage() {
 }
 
 const App = () => {
-  const docId = "doc11";
+  const docId = "doc12";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const [, setIsEditor] = useAtom(isEditorAtom);
