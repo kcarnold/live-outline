@@ -1,7 +1,6 @@
 // Simple service worker for PWA functionality
-const CACHE_NAME = 'live-outline-v1';
+const CACHE_NAME = 'live-outline-v2';
 const urlsToCache = [
-  '/',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png'
@@ -16,18 +15,30 @@ self.addEventListener('install', function(event) {
   );
 });
 
+
+// Network-first for navigation requests (root page), cache-first for others
 self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request)
-      .then(function(response) {
-        // Cache hit - return response
-        if (response) {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(function(response) {
           return response;
-        }
-        return fetch(event.request);
-      }
-    )
-  );
+        })
+        .catch(function() {
+          return caches.match('/');
+        })
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request)
+        .then(function(response) {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request);
+        })
+    );
+  }
 });
 
 // Update service worker
