@@ -86,8 +86,13 @@ const PORT = process.env.PORT || 8000;
 app.set("port", PORT);
 
 
-// Catch-all route to support React Router (client-side routing)
-app.get('*', (req, res) => {
+
+// Catch-all route to support React Router (client-side routing), but do not serve index.html for static asset requests
+app.get('*', (req, res, next) => {
+  // If the request is for a file with an extension (e.g., .js, .css, .png), skip to next middleware
+  if (req.path.match(/\.[a-zA-Z0-9]+$/)) {
+    return next();
+  }
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
