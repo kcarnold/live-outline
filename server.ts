@@ -2,7 +2,7 @@ import 'dotenv/config'
 import express from "express";
 import path from "path";
 import { fileURLToPath } from 'url';
-import { AssemblyAI } from "assemblyai";
+
 import { DocumentManager } from '@y-sweet/sdk'
 
 import { translateBlock, GeminiProvider } from './nlp.ts';
@@ -32,21 +32,30 @@ const app = express();
 app.use(express.static("dist"));
 app.use(express.json());
 
-const aai = new AssemblyAI({ apiKey: getEnvOrCrash("ASSEMBLYAI_API_KEY") });
-app.use(
-  "/assemblyai.js",
-  express.static(
-    path.join(__dirname, "node_modules/assemblyai/dist/assemblyai.umd.js"),
-  ),
-);
- 
-// AAI
+
+// AssemblyAI v3 token endpoint
 app.get("/api/aai_token", async (_req, res) => {
-  const hours = 4;
-  const token = await aai.realtime.createTemporaryToken({ expires_in: hours * 60 * 60 });
-  res.json({ token });
+  const expiresInSeconds = 2 * 60;
+  const apiKey = getEnvOrCrash("ASSEMBLYAI_API_KEY");
+  const url = `https://streaming.assemblyai.com/v3/token?expires_in_seconds=${expiresInSeconds}`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: apiKey,
+      },
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`AssemblyAI token fetch failed: ${response.status} ${errText}`);
+    }
+    const data = await response.json();
+    res.json({ token: data.token });
+  } catch (error: any) {
+    console.error("Error generating temp token:", error?.message || error);
+    res.status(500).json({ error: "Failed to generate token" });
+  }
 });
- 
 
 
 // Y-Sweet
