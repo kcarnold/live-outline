@@ -1,10 +1,12 @@
 import './App.css';
 import { useRef, useState } from 'react';
 import RecordRTC from 'recordrtc';
-import { usePlainTextSetter } from './yjsUtils';
+import * as Y from 'yjs';
+import { useYDoc } from '@y-sweet/react';
 
 function SpeechTranscriber() {
-  const setTranscript = usePlainTextSetter("transcript");
+  const yDoc = useYDoc();
+  const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
   const ws = useRef<WebSocket | null>(null);
   const recorder = useRef<RecordRTC | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -26,7 +28,6 @@ function SpeechTranscriber() {
       const token: string = await getToken();
       const endpoint = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&format_turns=false&token=${token}`;
       ws.current = new WebSocket(endpoint);
-      const turns: Record<number, string> = {};
 
       ws.current.onopen = () => {
         console.log('WebSocket connected!');
@@ -65,12 +66,13 @@ function SpeechTranscriber() {
           'turn_order' in msg && 'transcript' in msg
         ) {
           const { turn_order, transcript } = msg as { turn_order: number; transcript: string };
-          turns[turn_order] = transcript;
-          const orderedTurns = Object.keys(turns)
-            .sort((a, b) => Number(a) - Number(b))
-            .map((k) => turns[Number(k)])
-            .join('\n');
-          setTranscript(orderedTurns);
+          // Turns are always final, so we can create a new paragraph node with this turn's transcript
+          if (!transcriptXml) return;
+          const textNode = new Y.XmlText();
+          textNode.insert(0, transcript);
+          const paragraphNode = new Y.XmlElement('paragraph');
+          paragraphNode.insert(0, [textNode]);
+          transcriptXml.insert(turn_order, [paragraphNode]);
         }
       };
 

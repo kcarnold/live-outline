@@ -21,6 +21,8 @@ import { useAsPlainText } from "./yjsUtils";
 import { ClientToken } from "@y-sweet/sdk";
 import SlidesPlayer from "./SlidesPlayer";
 import { SourceTextTranslationManager } from "./SourceTextTranslationManager";
+import { ProseMirror } from "@handlewithcare/react-prosemirror";
+import ProseMirrorEditor from "./ProseMirrorEditor";
 
 function ConnectionStatusWidget({
   connectionStatus,
@@ -44,18 +46,18 @@ function ConnectionStatusWidget({
 }
 
 function TranscriptViewer() {
-  const [transcript] = useAsPlainText("transcript");
-  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-  useScrollToBottom(transcriptEndRef, [transcript]);
+  const yDoc = useYDoc();
+  const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
+  //const transcriptEndRef = useRef<HTMLDivElement | null>(null);
+  //useScrollToBottom(transcriptEndRef, [transcript]);
 
-  const transcriptWithoutPunctuation = transcript.replace(/[.,]/g, "");
   return (
-    <div className="overflow-auto pb-4 leading-tight">
-      {transcriptWithoutPunctuation.split("\n").map((x, i) => (
-        <div key={i}>{x}</div>
-      ))}
-      <div ref={transcriptEndRef} />
-    </div>
+    <ProseMirrorEditor
+      yXmlFragment={transcriptXml}
+      onTextChanged={() => null} // No-op, we don't need to handle text changes here
+      editable={false} // Read-only
+      onTranslationTrigger={() => null} // No-op, no translation in this viewer
+    />
   );
 }
 
@@ -319,7 +321,7 @@ function LayoutPage() {
 }
 
 const App = () => {
-  const docId = "doc13";
+  const docId = "doc14";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const [, setIsEditor] = useAtom(isEditorAtom);

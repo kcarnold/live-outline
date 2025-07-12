@@ -8,6 +8,7 @@ import { useTranslationManager } from "./useTranslationManager";
 export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
   const sourceTextRef = useRef("");
   const isEditor = useAtomValue(isEditorAtom);
+  const prosemirrorFragment = ydoc.getXmlFragment('prosemirror');
   const {
     isTranslating,
     translationError,
@@ -31,7 +32,7 @@ export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
       </h2>
       <div className="flex-1 min-h-0 overflow-auto">
         <ProseMirrorEditor
-          yDoc={ydoc}
+          yXmlFragment={prosemirrorFragment}
           onTextChanged={
             isEditor
               ? (val) => {
