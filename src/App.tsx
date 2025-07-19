@@ -17,11 +17,9 @@ import { useScrollToBottom } from "./reactUtils";
 import SpeechTranscriber from "./SpeechTranscriber";
 import TranslatedTextViewer from "./TranslatedTextViewer";
 import { translatedTextKeyForLanguage } from "./translationUtils";
-import { useAsPlainText } from "./yjsUtils";
 import { ClientToken } from "@y-sweet/sdk";
 import SlidesPlayer from "./SlidesPlayer";
 import { SourceTextTranslationManager } from "./SourceTextTranslationManager";
-import { ProseMirror } from "@handlewithcare/react-prosemirror";
 import ProseMirrorEditor from "./ProseMirrorEditor";
 
 function ConnectionStatusWidget({
@@ -48,16 +46,20 @@ function ConnectionStatusWidget({
 function TranscriptViewer({ editable = false }: { editable?: boolean }) {
   const yDoc = useYDoc();
   const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
-  //const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-  //useScrollToBottom(transcriptEndRef, [transcript]);
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
+  const [transcriptText, setTranscriptText] = useState("");
+  useScrollToBottom(transcriptEndRef, editable ? [""]: [transcriptText]);
 
   return (
+    <>
     <ProseMirrorEditor
       yXmlFragment={transcriptXml}
-      onTextChanged={() => null} // No-op, we don't need to handle text changes here
+      onTextChanged={setTranscriptText}
       editable={editable}
       onTranslationTrigger={() => null} // No-op, no translation in this viewer
-    />
+      />
+    <div ref={transcriptEndRef} className="h-0 w-0" />
+    </>
   );
 }
 
