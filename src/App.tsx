@@ -45,7 +45,7 @@ function ConnectionStatusWidget({
   );
 }
 
-function TranscriptViewer() {
+function TranscriptViewer({ editable = false }: { editable?: boolean }) {
   const yDoc = useYDoc();
   const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
   //const transcriptEndRef = useRef<HTMLDivElement | null>(null);
@@ -55,7 +55,7 @@ function TranscriptViewer() {
     <ProseMirrorEditor
       yXmlFragment={transcriptXml}
       onTextChanged={() => null} // No-op, we don't need to handle text changes here
-      editable={false} // Read-only
+      editable={editable}
       onTranslationTrigger={() => null} // No-op, no translation in this viewer
     />
   );
@@ -173,7 +173,7 @@ function LayoutPage() {
             Transcript
           </h2>
         )}
-        <TranscriptViewer />
+        <TranscriptViewer editable={isEditor} />
       </div>
     ),
     sourceText: () => (
