@@ -69,7 +69,7 @@ const availableLayouts = [
     key: 'translation-only',
     label: 'Translation Only',
     layout: [
-      ["video", "translatedText"]
+      ["video", "translatedOutline"]
     ]
   },
   {
@@ -77,7 +77,7 @@ const availableLayouts = [
     label: 'Transcript | Translation',
     layout: [
       ["transcript"],
-      ["translatedText", "video"]
+      ["translatedOutline", "video"]
     ]
   },
   {
@@ -85,7 +85,7 @@ const availableLayouts = [
     label: 'Transcript, Source | Translation',
     layout: [
       ["transcript", "sourceText"],
-      ["translatedText", "video"]
+      ["translatedOutline", "video"]
     ]
   },
   {
@@ -93,7 +93,7 @@ const availableLayouts = [
     label: 'Transcript | Source Text, Translation',
     layout: [
       ["transcript", "video"],
-      ["sourceText", "translatedText"]
+      ["sourceText", "translatedOutline"]
     ]
   },
 ];
@@ -108,7 +108,7 @@ function HomePage() {
       </h1>
       <div className="flex flex-col gap-6 w-full max-w-xl">
         {availableLayouts.map((layout) => {
-          // Convert layout array to human-legible string, e.g. transcript,video|sourceText,translatedText
+          // Convert layout array to human-legible string, e.g. transcript,video|sourceText,translatedOutline
           const layoutStr = layout.layout.map(row => row.join(",")).join("|");
           return (
             <div
@@ -192,7 +192,7 @@ function LayoutPage() {
         </div>
       </>
     ),
-    translatedText: () => (
+    translatedOutline: () => (
       <div
         className={
           cardClass +
