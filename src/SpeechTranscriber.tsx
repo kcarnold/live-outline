@@ -1,13 +1,52 @@
 import './App.css';
 import { useRef, useState } from 'react';
 import RecordRTC from 'recordrtc';
-import { usePlainTextSetter } from './yjsUtils';
+import * as Y from 'yjs';
+import { useYDoc } from '@y-sweet/react';
+import { setYTextFromString } from './yjsUtils';
+
+function insertOrUpdateTurn(
+  transcriptXml: Y.XmlFragment,
+  transcriptSessionId: string,
+  turnOrder: number,
+  transcript: string
+) {
+  for (let i = 0; i < transcriptXml.length; i++) {
+    const element = transcriptXml.get(i);
+    if (
+      element instanceof Y.XmlElement &&
+      element.nodeName === 'paragraph' &&
+      element.getAttribute('session_id') === transcriptSessionId &&
+      element.getAttribute('turn_order') === turnOrder.toString()
+    ) {
+      // Update existing turn
+      const textNode = element.get(0);
+      if (textNode instanceof Y.XmlText) {
+        setYTextFromString(textNode, transcript);
+      } else {
+        console.warn(`Expected XmlText but found ${textNode.constructor.name}`);
+      }
+      return;
+    }
+  }
+  // If no existing turn found, create a new one
+  const textNode = new Y.XmlText();
+  textNode.insert(0, transcript);
+  const paragraphNode = new Y.XmlElement('paragraph');
+  paragraphNode.setAttribute('session_id', transcriptSessionId);
+  paragraphNode.setAttribute('turn_order', turnOrder.toString());
+  paragraphNode.insert(0, [textNode]);
+  // insert it at the end
+  transcriptXml.insert(transcriptXml.length, [paragraphNode]);
+}
 
 function SpeechTranscriber() {
-  const setTranscript = usePlainTextSetter("transcript");
+  const yDoc = useYDoc();
+  const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
   const ws = useRef<WebSocket | null>(null);
   const recorder = useRef<RecordRTC | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
 
   type TokenResponse = { token: string; error?: string };
   const getToken = async (): Promise<string> => {
@@ -26,7 +65,6 @@ function SpeechTranscriber() {
       const token: string = await getToken();
       const endpoint = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&format_turns=false&token=${token}`;
       ws.current = new WebSocket(endpoint);
-      const turns: Record<number, string> = {};
 
       ws.current.onopen = () => {
         console.log('WebSocket connected!');
@@ -49,6 +87,7 @@ function SpeechTranscriber() {
         });
         recorder.current.startRecording();
         setIsRecording(true);
+        sessionIdRef.current = "" + Date.now();
       };
 
       ws.current.onmessage = (event: MessageEvent) => {
@@ -59,18 +98,14 @@ function SpeechTranscriber() {
           console.error('Failed to parse message', e);
           return;
         }
+        console.log(msg);
         if (
           typeof msg === 'object' && msg !== null &&
           'type' in msg && (msg as { type?: string }).type === 'Turn' &&
           'turn_order' in msg && 'transcript' in msg
         ) {
           const { turn_order, transcript } = msg as { turn_order: number; transcript: string };
-          turns[turn_order] = transcript;
-          const orderedTurns = Object.keys(turns)
-            .sort((a, b) => Number(a) - Number(b))
-            .map((k) => turns[Number(k)])
-            .join('\n');
-          setTranscript(orderedTurns);
+          insertOrUpdateTurn(transcriptXml, sessionIdRef.current!, turn_order, transcript);
         }
       };
 

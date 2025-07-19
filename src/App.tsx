@@ -17,10 +17,10 @@ import { useScrollToBottom } from "./reactUtils";
 import SpeechTranscriber from "./SpeechTranscriber";
 import TranslatedTextViewer from "./TranslatedTextViewer";
 import { translatedTextKeyForLanguage } from "./translationUtils";
-import { useAsPlainText } from "./yjsUtils";
 import { ClientToken } from "@y-sweet/sdk";
 import SlidesPlayer from "./SlidesPlayer";
 import { SourceTextTranslationManager } from "./SourceTextTranslationManager";
+import ProseMirrorEditor from "./ProseMirrorEditor";
 
 function ConnectionStatusWidget({
   connectionStatus,
@@ -43,19 +43,23 @@ function ConnectionStatusWidget({
   );
 }
 
-function TranscriptViewer() {
-  const [transcript] = useAsPlainText("transcript");
+function TranscriptViewer({ editable = false }: { editable?: boolean }) {
+  const yDoc = useYDoc();
+  const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-  useScrollToBottom(transcriptEndRef, [transcript]);
+  const [transcriptText, setTranscriptText] = useState("");
+  useScrollToBottom(transcriptEndRef, editable ? [""]: [transcriptText]);
 
-  const transcriptWithoutPunctuation = transcript.replace(/[.,]/g, "");
   return (
-    <div className="overflow-auto pb-4 leading-tight">
-      {transcriptWithoutPunctuation.split("\n").map((x, i) => (
-        <div key={i}>{x}</div>
-      ))}
-      <div ref={transcriptEndRef} />
-    </div>
+    <>
+    <ProseMirrorEditor
+      yXmlFragment={transcriptXml}
+      onTextChanged={setTranscriptText}
+      editable={editable}
+      onTranslationTrigger={() => null} // No-op, no translation in this viewer
+      />
+    <div ref={transcriptEndRef} className="h-0 w-0" />
+    </>
   );
 }
 
@@ -171,7 +175,7 @@ function LayoutPage() {
             Transcript
           </h2>
         )}
-        <TranscriptViewer />
+        <TranscriptViewer editable={isEditor} />
       </div>
     ),
     sourceText: () => (
@@ -319,7 +323,7 @@ function LayoutPage() {
 }
 
 const App = () => {
-  const docId = "doc13";
+  const docId = "doc14";
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   const [, setIsEditor] = useAtom(isEditorAtom);

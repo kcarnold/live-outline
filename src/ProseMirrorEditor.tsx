@@ -29,13 +29,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //import { Awareness } from 'y-protocols/awareness.js';
 
 
-const ProseMirrorEditor = ({ yDoc, onTextChanged, editable, onTranslationTrigger }: {
-  yDoc: Y.Doc,
+const ProseMirrorEditor = ({ yXmlFragment, onTextChanged, editable, onTranslationTrigger }: {
+  yXmlFragment: Y.XmlFragment,
   onTextChanged: (text: string) => void,
   editable: boolean,
   onTranslationTrigger?: () => void
 }) => {
-  const yXmlFragment = yDoc.getXmlFragment('prosemirror');
   // @ts-ignore
   window.yXmlFragment = yXmlFragment; // For debugging
 
