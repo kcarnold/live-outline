@@ -5,13 +5,15 @@ import { GenericMap, TranslationCache, getUpdatedTranslation, translatedTextKeyF
 
 export function useTranslationManager({
   languages,
-  sourceTextRef
+  sourceTextRef,
+  translationCacheName
 }: {
   languages: readonly string[];
   sourceTextRef: React.RefObject<string>;
+  translationCacheName: string;
 }) {
   const ydoc = useYDoc();
-  const translationCache = useMap('translationCache');
+  const translationCache = useMap(translationCacheName);
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationError, setTranslationError] = useState("");
 
