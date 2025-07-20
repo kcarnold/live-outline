@@ -45,7 +45,10 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fon
 
 
   return (
-    <div className="overflow-auto pb-16" style={fontSize ? { fontSize: `${fontSize}px` } : undefined}>
+    <div
+      className={`overflow-auto pb-16 max-w-2xl w-full mx-auto`}
+      style={fontSize ? { fontSize: `${fontSize}px` } : undefined}
+    >
       {renderedTree.tree}
       <div ref={translatedTextEndRef} />
     </div>
