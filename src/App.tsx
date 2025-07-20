@@ -63,6 +63,128 @@ function TranscriptViewer({ editable = false }: { editable?: boolean }) {
   );
 }
 
+// Layout components
+function TranscriptComponent({ editable }: { editable: boolean }) {
+  const cardClass = "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
+  
+  return (
+    <div
+      className={
+        cardClass +
+        " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60 text-black dark:text-gray-200"
+      }
+    >
+      {editable ? (
+        <SpeechTranscriber />
+      ) : (
+        <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">
+          Transcript
+        </h2>
+      )}
+      <TranscriptViewer editable={editable} />
+    </div>
+  );
+}
+
+function SourceTextComponent() {
+  const cardClass = "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
+  const ydoc = useYDoc();
+  
+  return (
+    <div
+      className={
+        cardClass +
+        " flex-1/2 overflow-auto bg-white/70 dark:bg-gray-900/70"
+      }
+    >
+      <SourceTextTranslationManager ydoc={ydoc} />
+    </div>
+  );
+}
+
+function TranslatedOutlineComponent({ language, onLanguageChange }: { language: string; onLanguageChange: (newLang: string) => void }) {
+  const cardClass = "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
+  const fontSize = useAtomValue(fontSizeAtom);
+  
+  return (
+    <div
+      className={
+        cardClass +
+        " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100 overflow-auto"
+      }
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight mb-0">
+          Translation
+        </h2>
+        <select
+          className="ml-2 px-1 py-0.5 rounded text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
+          value={language}
+          onChange={(e) => onLanguageChange(e.target.value)}
+        >
+          {languages.map((lang) => (
+            <option key={lang} value={lang}>
+              {lang}
+            </option>
+          ))}
+        </select>
+      </div>
+      <TranslatedTextViewer
+        yJsKey={translatedTextKeyForLanguage(language)}
+        fontSize={fontSize}
+      />
+    </div>
+  );
+}
+
+function VideoComponent({ isEditor }: { isEditor: boolean }) {
+  const cardClass = "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
+  const [peerConnectionDisconnected, setPeerConnectionDisconnected] = useState(true);
+  const meta = useMap("meta");
+  const videoVisibility = meta.get("videoVisibility") || "visible";
+
+  if (!isEditor && videoVisibility === "hidden") {
+    return null;
+  }
+
+  return (
+    <div
+      className={
+        cardClass +
+        " flex-1/2 overflow-hidden bg-gray-100/80 dark:bg-gray-900/60"
+      }
+    >
+      {(isEditor || videoVisibility !== "hidden") && (
+        <>
+          {peerConnectionDisconnected && <b>Waiting for video...</b>}
+          {isEditor && (
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              <label className="mr-1">
+                <input
+                  type="checkbox"
+                  checked={videoVisibility !== "hidden"}
+                  onChange={(e) => {
+                    meta.set(
+                      "videoVisibility",
+                      e.target.checked ? "visible" : "hidden"
+                    );
+                  }}
+                />{" "}
+                Show Video
+              </label>
+            </div>
+          )}
+          <SlidesPlayer
+            streamToken={"ncf-live-translation"}
+            apiPath={"https://b.siobud.com/api"}
+            setPeerConnectionDisconnected={setPeerConnectionDisconnected}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
 // Layouts: each is an array of arrays of component keys
 const availableLayouts = [
   {
@@ -108,8 +230,12 @@ function HomePage() {
       </h1>
       <div className="flex flex-col gap-6 w-full max-w-xl">
         {availableLayouts.map((layout) => {
-          // Convert layout array to human-legible string, e.g. transcript,video|sourceText,translatedOutline
-          const layoutStr = layout.layout.map(row => row.join(",")).join("|");
+          // Convert layout array to human-legible string, adding default language to translatedOutline components
+          const layoutStr = layout.layout.map(row => 
+            row.map(component => 
+              component === 'translatedOutline' ? `translatedOutline-${defaultLang}` : component
+            ).join(",")
+          ).join("|");
           return (
             <div
               key={layout.key}
@@ -118,7 +244,7 @@ function HomePage() {
               <div className="flex flex-col md:flex-row items-center gap-3 mb-2">
                 <LayoutDiagram layout={layout.layout} />
                 <Link
-                  to={`/${layoutStr}/${encodeURIComponent(defaultLang)}`}
+                  to={`/${layoutStr}`}
                   className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
                 >
                   {layout.label}
@@ -132,158 +258,90 @@ function HomePage() {
   );
 }
 
-// Layout page: render the selected layout and language from URL
+// Layout page: render the selected layout from URL
 function LayoutPage() {
-  const { layout, language } = useParams();
+  const { layout } = useParams();
   const connectionStatus = useConnectionStatus();
   const ydoc = useYDoc();
   // @ts-expect-error ts doesn't like patching stuff onto window
   window.ydoc = ydoc; // For debugging purposes
-  const fontSize = useAtomValue(fontSizeAtom);
   const isEditor = useAtomValue(isEditorAtom);
   const navigate = useNavigate();
-  const [peerConnectionDisconnected, setPeerConnectionDisconnected] =
-    useState(true);
-  const meta = useMap("meta");
-  const videoVisibility = meta.get("videoVisibility") || "visible";
 
-  // Parse layout from URL: e.g. "transcript,slides|chat" => [["transcript", "slides"], ["chat"]]
+  // Parse layout from URL: e.g. "transcript,translatedOutline-French|video" => [["transcript", "translatedOutline-French"], ["video"]]
   function parseLayoutString(layoutStr: string | undefined): string[][] {
     if (!layoutStr) return [];
     return layoutStr.split("|").map(row => row.split(","));
   }
 
-  // Derive the set of all possible component keys from the layouts
-  type ComponentKey =
-    (typeof availableLayouts)[number]["layout"][number][number];
-  type ComponentMapType = { [K in ComponentKey]: () => React.ReactNode };
+  // Update URL when a translation component changes its language
+  function updateComponentLanguage(oldComponentStr: string, newLanguage: string) {
+    const parsedLayout = parseLayoutString(layout);
+    const newLayoutStr = parsedLayout.map(row => 
+      row.map(component => 
+        component === oldComponentStr ? `translatedOutline-${newLanguage}` : component
+      ).join(",")
+    ).join("|");
+    void navigate(`/${newLayoutStr}`, { replace: true });
+  }
 
-  const cardClass =
-    "rounded-md shadow bg-gray-100/80 dark:bg-gray-800/80 p-2 mb-2 flex flex-col gap-1 transition hover:shadow-lg";
-  const componentMap: ComponentMapType = {
-    transcript: () => (
-      <div
-        className={
-          cardClass +
-          " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60 text-black dark:text-gray-200"
-        }
-      >
-        {isEditor ? (
-          <SpeechTranscriber />
-        ) : (
-          <h2 className="font-semibold text-xs text-gray-600 dark:text-gray-300 leading-tight">
-            Transcript
-          </h2>
-        )}
-        <TranscriptViewer editable={isEditor} />
-      </div>
-    ),
-    sourceText: () => (
-      <>
-        <div
-          className={
-            cardClass +
-            " flex-1/2 overflow-auto bg-white/70 dark:bg-gray-900/70"
-          }
-        >
-          <SourceTextTranslationManager
-            ydoc={ydoc}
-          />
-        </div>
-      </>
-    ),
-    translatedOutline: () => (
-      <div
-        className={
-          cardClass +
-          " flex-1/2 bg-gray-100/80 dark:bg-gray-900/60 text-gray-900 dark:text-gray-100 overflow-auto"
-        }
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <h2 className="font-semibold text-xs text-gray-500 dark:text-gray-300 leading-tight mb-0">
-            Translation
-          </h2>
-          <select
-            className="ml-2 px-1 py-0.5 rounded text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
-            value={language}
-            onChange={(e) =>
-              void navigate(
-                `/${layout}/${encodeURIComponent(e.target.value)}`
-              )
-            }
-          >
-            {languages.map((lang) => (
-              <option key={lang} value={lang}>
-                {lang}
-              </option>
-            ))}
-          </select>
-        </div>
-        <TranslatedTextViewer
-          yJsKey={translatedTextKeyForLanguage(language!)}
-          fontSize={fontSize}
-        />
-      </div>
-    ),
-    video: () => {
-      if (!isEditor && videoVisibility === "hidden") {
-        return null;
-      }
+  // Function to render a component based on its string identifier
+  const renderComponent = (componentStr: string, key: string) => {
+    if (componentStr === 'transcript') {
+      return <TranscriptComponent key={key} editable={isEditor} />;
+    }
+    
+    if (componentStr === 'sourceText') {
+      return <SourceTextComponent key={key} />;
+    }
+    
+    if (componentStr === 'video') {
+      return <VideoComponent key={key} isEditor={isEditor} />;
+    }
+    
+    if (componentStr.startsWith('translatedOutline-')) {
+      const language = componentStr.substring('translatedOutline-'.length);
+      // Validate language, default to first language if invalid
+      const validLanguage = (languages as readonly string[]).includes(language) ? language : languages[0];
+      
       return (
-        <div
-          className={
-            cardClass +
-            " flex-1/2 overflow-hidden bg-gray-100/80 dark:bg-gray-900/60"
-          }
-        >
-          {(isEditor || videoVisibility !== "hidden") && (
-            <>
-              {peerConnectionDisconnected && <b>Waiting for video...</b>}
-              {isEditor && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  <label className="mr-1">
-                    <input
-                      type="checkbox"
-                      checked={videoVisibility !== "hidden"}
-                      onChange={(e) => {
-                        meta.set(
-                          "videoVisibility",
-                          e.target.checked ? "visible" : "hidden"
-                        );
-                      }}
-                    />{" "}
-                    Show Video
-                  </label>
-                </div>
-              )}
-              <SlidesPlayer
-                streamToken={"ncf-live-translation"}
-                apiPath={"https://b.siobud.com/api"}
-                setPeerConnectionDisconnected={setPeerConnectionDisconnected}
-              />
-            </>
-          )}
-        </div>
+        <TranslatedOutlineComponent 
+          key={key}
+          language={validLanguage}
+          onLanguageChange={(newLang) => updateComponentLanguage(componentStr, newLang)}
+        />
       );
-    },
+    }
+    
+    // Invalid component
+    return null;
   };
 
-    const parsedLayout = parseLayoutString(layout);
+  const parsedLayout = parseLayoutString(layout);
 
-  // Ensure that the layout is valid
+  // Validate that all components in the layout are valid
+  const isValidComponent = (componentStr: string): boolean => {
+    if (['transcript', 'sourceText', 'video'].includes(componentStr)) {
+      return true;
+    }
+    
+    if (componentStr.startsWith('translatedOutline-')) {
+      const language = componentStr.substring('translatedOutline-'.length);
+      return (languages as readonly string[]).includes(language);
+    }
+    
+    return false;
+  };
+
   const isValidLayout = parsedLayout.every(
-    (row) =>
-      row.every((key) => Object.keys(componentMap).includes(key))
+    (row) => row.every((key) => isValidComponent(key))
   );
 
-  // If anything is wrong with the layout or the language, redirect to home
-  // @ts-expect-error "languages" is a const array
-  if (!isValidLayout || !language || !languages.includes(language)) {
+  // If anything is wrong with the layout, redirect to home
+  if (!isValidLayout) {
     void navigate("/", { replace: true });
     return null;
   }
-
-
 
   // Render layout columns
   const columns = parsedLayout.map((col, i) => {
@@ -297,9 +355,9 @@ function LayoutPage() {
             : "flex flex-col w-full md:w-1/2 h-1/2 md:h-full gap-2 p-1"
         }
       >
-        {col.map((key, j) => (
-          <React.Fragment key={key + j}>{componentMap[key]()}</React.Fragment>
-        ))}
+        {col.map((componentStr, j) => 
+          renderComponent(componentStr, `${componentStr}-${i}-${j}`)
+        )}
       </div>
     );
   });
@@ -345,7 +403,7 @@ const App = () => {
     <YDocProvider docId={docId} authEndpoint={authEndpoint}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/:layout/:language" element={<LayoutPage />} />
+        <Route path="/:layout" element={<LayoutPage />} />
       </Routes>
     </YDocProvider>
   );
