@@ -51,15 +51,15 @@ function TranscriptViewer({ editable = false }: { editable?: boolean }) {
   useScrollToBottom(transcriptEndRef, editable ? [""]: [transcriptText]);
 
   return (
-    <>
-    <ProseMirrorEditor
-      yXmlFragment={transcriptXml}
-      onTextChanged={setTranscriptText}
-      editable={editable}
-      onTranslationTrigger={() => null} // No-op, no translation in this viewer
-      />
-    <div ref={transcriptEndRef} className="h-0 w-0" />
-    </>
+    <div className="p-compact">
+      <ProseMirrorEditor
+        yXmlFragment={transcriptXml}
+        onTextChanged={setTranscriptText}
+        editable={editable}
+        onTranslationTrigger={() => null} // No-op, no translation in this viewer
+        />
+      <div ref={transcriptEndRef} className="h-0 w-0" />
+    </div>
   );
 }
 

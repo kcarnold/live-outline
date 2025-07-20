@@ -39,7 +39,7 @@
     font-weight: bold;
   }
 
-  p {
+  p:not(.p-compact p) {
     margin: 0.5em 0;
   }
   ul p { margin: initial; }
