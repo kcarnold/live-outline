@@ -21,7 +21,7 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fon
   const prevTextHashesRef = useRef<Set<string>>(new Set());
   const translatedTextEndRef = useRef<HTMLDivElement | null>(null);
 
-  useScrollToBottom(translatedTextEndRef, [translatedText]);
+  useScrollToBottom(translatedTextEndRef, [translatedText], true);
 
   // Only process once: update prevTextHashes after renderedTree is created
   const renderedTree = useMemo(() => {

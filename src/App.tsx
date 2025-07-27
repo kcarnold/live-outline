@@ -48,7 +48,7 @@ function TranscriptViewer({ editable = false }: { editable?: boolean }) {
   const transcriptXml = yDoc.getXmlFragment("transcriptDoc");
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const [transcriptText, setTranscriptText] = useState("");
-  useScrollToBottom(transcriptEndRef, editable ? [""]: [transcriptText]);
+  useScrollToBottom(transcriptEndRef, [transcriptText], true);
 
   return (
     <div className="p-compact">
