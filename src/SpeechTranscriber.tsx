@@ -47,6 +47,7 @@ function SpeechTranscriber() {
   const recorder = useRef<RecordRTC | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   type TokenResponse = { token: string; error?: string };
   const getToken = async (): Promise<string> => {
@@ -88,6 +89,17 @@ function SpeechTranscriber() {
         recorder.current.startRecording();
         setIsRecording(true);
         sessionIdRef.current = "" + Date.now();
+        if (wakeLockRef.current) {
+          wakeLockRef.current.release().catch((err) => {
+            console.error('Failed to release wake lock:', err);
+          });
+          wakeLockRef.current = null;
+        }
+        navigator.wakeLock.request('screen').then((wakeLock) => {
+          wakeLockRef.current = wakeLock;
+        }).catch((err) => {
+          console.error('Failed to acquire wake lock:', err);
+        });
       };
 
       ws.current.onmessage = (event: MessageEvent) => {
@@ -142,6 +154,12 @@ function SpeechTranscriber() {
     if (recorder.current) {
       recorder.current.pauseRecording();
       recorder.current = null;
+    }
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release().catch((err) => {
+        console.error('Failed to release wake lock:', err);
+      });
+      wakeLockRef.current = null;
     }
   };
 
