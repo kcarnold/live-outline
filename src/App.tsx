@@ -189,14 +189,21 @@ function VideoComponent({ isEditor }: { isEditor: boolean }) {
 const availableLayouts = [
   {
     key: 'translation-only',
-    label: 'Translation Only',
+    label: 'One Translation',
     layout: [
       ["video", "translatedOutline"]
     ]
   },
   {
+    key: 'translation-only',
+    label: 'Two Translations',
+    layout: [
+      ["video", "translatedOutline", "translatedOutline"]
+    ]
+  },
+  {
     key: 'transcript-translation',
-    label: 'Transcript | Translation',
+    label: 'Transcript and Translation',
     layout: [
       ["transcript"],
       ["translatedOutline", "video"]
@@ -204,18 +211,10 @@ const availableLayouts = [
   },
   {
     key: 'full',
-    label: 'Transcript, Source | Translation',
+    label: 'Everything',
     layout: [
       ["transcript", "sourceText"],
       ["translatedOutline", "video"]
-    ]
-  },
-  {
-    key: 'transcript-source',
-    label: 'Transcript | Source Text, Translation',
-    layout: [
-      ["transcript", "video"],
-      ["sourceText", "translatedOutline"]
     ]
   },
 ];
