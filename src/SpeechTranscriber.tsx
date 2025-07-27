@@ -73,10 +73,10 @@ function SpeechTranscriber() {
           type: 'audio',
           mimeType: 'audio/webm;codecs=pcm',
           recorderType: RecordRTC.StereoAudioRecorder,
-          timeSlice: 250,
+          timeSlice: 100,
           desiredSampRate: 16000,
           numberOfAudioChannels: 1,
-          bufferSize: 4096,
+          bufferSize: 1024,
           audioBitsPerSecond: 128000,
           ondataavailable: (blob) => {
             if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
