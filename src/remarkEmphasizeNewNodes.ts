@@ -16,7 +16,6 @@ export function remarkEmphasizeNewNodes(options: { prevTextHashes: Set<string>, 
           currentTextHashes.add(hash);
         }
         if (!prevTextHashes.has(hash)) {
-          console.log('New text node found:', hash);
           return true; // This is a new text node
         }
         return false;
