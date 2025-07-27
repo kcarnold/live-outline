@@ -276,18 +276,22 @@ function LayoutPage() {
   }
 
   // Update URL when a translation component changes its language
-  function updateComponentLanguage(oldComponentStr: string, newLanguage: string) {
+  function updateComponentLanguage(rowIdx: number, colIdx: number, newLanguage: string) {
     const parsedLayout = parseLayoutString(layout);
-    const newLayoutStr = parsedLayout.map(row => 
-      row.map(component => 
-        component === oldComponentStr ? `translatedOutline-${newLanguage}` : component
-      ).join(",")
-    ).join("|");
+    const newLayout = parsedLayout.map((row, r) =>
+      row.map((component, c) => {
+        if (r === rowIdx && c === colIdx && component.startsWith('translatedOutline-')) {
+          return `translatedOutline-${newLanguage}`;
+        }
+        return component;
+      })
+    );
+    const newLayoutStr = newLayout.map(row => row.join(",")).join("|");
     void navigate(`/${newLayoutStr}`, { replace: true });
   }
 
   // Function to render a component based on its string identifier
-  const renderComponent = (componentStr: string, key: string) => {
+  const renderComponent = (componentStr: string, key: string, rowIdx: number, colIdx: number) => {
     if (componentStr === 'transcript') {
       return <TranscriptComponent key={key} editable={isEditor} />;
     }
@@ -309,7 +313,7 @@ function LayoutPage() {
         <TranslatedOutlineComponent 
           key={key}
           language={validLanguage}
-          onLanguageChange={(newLang) => updateComponentLanguage(componentStr, newLang)}
+          onLanguageChange={(newLang) => updateComponentLanguage(rowIdx, colIdx, newLang)}
         />
       );
     }
@@ -357,7 +361,7 @@ function LayoutPage() {
         }
       >
         {col.map((componentStr, j) => 
-          renderComponent(componentStr, `${componentStr}-${i}-${j}`)
+          renderComponent(componentStr, `${componentStr}-${i}-${j}`, i, j)
         )}
       </div>
     );
