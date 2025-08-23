@@ -64,7 +64,7 @@ function SpeechTranscriber() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const token: string = await getToken();
-      const endpoint = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&format_turns=false&min_end_of_turn_silence_when_confident=500&token=${token}`;
+      const endpoint = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&format_turns=true&min_end_of_turn_silence_when_confident=500&token=${token}`;
       ws.current = new WebSocket(endpoint);
 
       ws.current.onopen = () => {
