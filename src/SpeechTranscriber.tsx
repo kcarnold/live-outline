@@ -102,7 +102,6 @@ function SpeechTranscriber() {
                   if (curBuffer.byteLength > maxChunkBytes) {
                     // Split the buffer in half
                     const mid = Math.floor(curBuffer.byteLength / 2);
-                    console.log(`Splitting buffer of size ${curBuffer.byteLength} into chunks of ${mid} and ${curBuffer.byteLength - mid}`);
                     newBuffers.push(curBuffer.slice(0, mid));
                     newBuffers.push(curBuffer.slice(mid));
                     didAnySplits = true;
@@ -113,7 +112,9 @@ function SpeechTranscriber() {
                 newBuffers = [];
               }
               // Send all chunks
-              console.log(`Sending ${buffers.length} chunks`);
+              if (buffers.length > 1) {
+                console.log(`Sending ${buffers.length} chunks`);
+              }
               for (const chunk of buffers) {
                 ws.current.send(chunk);
               }
