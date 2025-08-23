@@ -158,11 +158,13 @@ function SpeechTranscriber() {
       ws.current.onerror = (err) => {
         console.error('WebSocket error:', err);
         alert('WebSocket error, check the console.');
+        stopEverything();
       };
 
       ws.current.onclose = (event) => {
         console.log('WebSocket closed', event);
         ws.current = null;
+        stopEverything();
       };
     } catch (error) {
       console.error(error);
@@ -175,6 +177,10 @@ function SpeechTranscriber() {
 
   const endTranscription = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
+    stopEverything();
+  };
+
+  const stopEverything = (): void => {
     setIsRecording(false);
     if (ws.current) {
       try {
