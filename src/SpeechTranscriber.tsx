@@ -80,9 +80,43 @@ function SpeechTranscriber() {
           audioBitsPerSecond: 128000,
           ondataavailable: (blob) => {
             if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
+            const sampleRate = recorder.current?.sampleRate || 16000; // Hz
+            // Compute chunk sizes using actual sample rate and bit depth
+            const channels = 1;
+            const bytesPerSample = 2; // 16-bit PCM
+            const frameSize = channels * bytesPerSample; // bytes per sample frame
+            const bytesPerMs = (sampleRate * frameSize) / 1000;
+            const maxChunkBytes = bytesPerMs * 100;//500; // 500ms
+
             // Convert blob to ArrayBuffer and send
             void blob.arrayBuffer().then((buffer) => {
-              if (ws.current) ws.current.send(buffer);
+              if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
+
+              // If the buffer is longer than 500ms, split it into chunks.
+              // Do this by splitting any buffer longer than 500ms in half.
+              let buffers = [buffer];
+              let didAnySplits = false;
+              let newBuffers = [];
+              while (true) {
+                for (const curBuffer of buffers) {
+                  if (curBuffer.byteLength > maxChunkBytes) {
+                    // Split the buffer in half
+                    const mid = Math.floor(curBuffer.byteLength / 2);
+                    console.log(`Splitting buffer of size ${curBuffer.byteLength} into chunks of ${mid} and ${curBuffer.byteLength - mid}`);
+                    newBuffers.push(curBuffer.slice(0, mid));
+                    newBuffers.push(curBuffer.slice(mid));
+                    didAnySplits = true;
+                  }
+                }
+                if (!didAnySplits) break;
+                buffers = newBuffers;
+                newBuffers = [];
+              }
+              // Send all chunks
+              console.log(`Sending ${buffers.length} chunks`);
+              for (const chunk of buffers) {
+                ws.current.send(chunk);
+              }
             });
           },
         });
