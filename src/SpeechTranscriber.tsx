@@ -86,7 +86,7 @@ function SpeechTranscriber() {
             const bytesPerSample = 2; // 16-bit PCM
             const frameSize = channels * bytesPerSample; // bytes per sample frame
             const bytesPerMs = (sampleRate * frameSize) / 1000;
-            const maxChunkBytes = bytesPerMs * 100;//500; // 500ms
+            const maxChunkBytes = bytesPerMs * 500; // 500ms
 
             // Convert blob to ArrayBuffer and send
             void blob.arrayBuffer().then((buffer) => {
@@ -95,9 +95,9 @@ function SpeechTranscriber() {
               // If the buffer is longer than 500ms, split it into chunks.
               // Do this by splitting any buffer longer than 500ms in half.
               let buffers = [buffer];
-              let didAnySplits = false;
               let newBuffers = [];
               while (true) {
+                let didAnySplits = false;
                 for (const curBuffer of buffers) {
                   if (curBuffer.byteLength > maxChunkBytes) {
                     // Split the buffer in half
