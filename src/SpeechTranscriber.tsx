@@ -105,6 +105,8 @@ function SpeechTranscriber() {
                     newBuffers.push(curBuffer.slice(0, mid));
                     newBuffers.push(curBuffer.slice(mid));
                     didAnySplits = true;
+                  } else {
+                    newBuffers.push(curBuffer);
                   }
                 }
                 if (!didAnySplits) break;
