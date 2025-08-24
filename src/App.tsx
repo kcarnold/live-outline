@@ -384,20 +384,19 @@ function LayoutPage() {
   );
 }
 
+const getTodayLocal = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+};
+
 const App = () => {
   // We're an editor only if location hash includes #editor
   const isEditor = window.location.hash.includes("editor");
   
   const searchParams = new URLSearchParams(window.location.search);
   // Default doc id is `doc-${date}`, where date is today's date
-  const date = new Date().toISOString().split("T")[0];
-  let docId = `doc-${date}`;
-
   // but allow override from the URL search params ?doc=${docId}
-  const docParam = searchParams.get("doc");
-  if (docParam) {
-    docId = docParam;
-  }
+  const docId = searchParams.get("doc") || `doc-${getTodayLocal()}`;
 
   const [, setIsEditor] = useAtom(isEditorAtom);
   React.useEffect(() => {
