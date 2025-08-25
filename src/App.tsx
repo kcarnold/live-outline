@@ -51,7 +51,7 @@ function TranscriptViewer({ editable = false }: { editable?: boolean }) {
   useScrollToBottom(transcriptEndRef, [transcriptText], true);
 
   return (
-    <div className="p-compact">
+    <div className="p-compact overflow-auto">
       <ProseMirrorEditor
         yXmlFragment={transcriptXml}
         onTextChanged={setTranscriptText}
@@ -71,7 +71,7 @@ function TranscriptComponent({ editable }: { editable: boolean }) {
     <div
       className={
         cardClass +
-        " flex-1/2 overflow-auto bg-gray-50/80 dark:bg-gray-900/60 text-black dark:text-gray-200"
+        " flex-1/2 min-h-0 bg-gray-50/80 dark:bg-gray-900/60 text-black dark:text-gray-200"
       }
     >
       {editable ? (
