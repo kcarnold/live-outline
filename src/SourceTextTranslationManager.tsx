@@ -8,7 +8,7 @@ import { useTranslationManager } from "./useTranslationManager";
 export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
   const sourceTextRef = useRef("");
   const isEditor = useAtomValue(isEditorAtom);
-  const prosemirrorFragment = ydoc.getXmlFragment('prosemirror');
+  const prosemirrorFragment = ydoc.getXmlFragment("prosemirror");
   const {
     isTranslating,
     translationError,
@@ -17,7 +17,7 @@ export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
   } = useTranslationManager({
     languages,
     sourceTextRef,
-    translationCacheName: 'outlineTranslationCache',
+    translationCacheName: "outlineTranslationCache",
   });
 
   const doTranslationsSync = useCallback(() => {
