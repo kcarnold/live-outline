@@ -5,6 +5,12 @@ import { isEditorAtom, languages } from "./configAtoms";
 import ProseMirrorEditor from "./ProseMirrorEditor";
 import { useTranslationManager } from "./useTranslationManager";
 
+const isMac = (() => {
+  if (typeof navigator === "undefined") return false;
+  const platform = navigator.platform || "";
+  return /Mac|iPhone|iPad|iPod/.test(platform);
+})();
+
 export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
   const sourceTextRef = useRef("");
   const isEditor = useAtomValue(isEditorAtom);
@@ -67,7 +73,9 @@ export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
             onClick={doTranslationsSync}
             disabled={isTranslating}
           >
-            {isTranslating ? "Translating..." : "Translate"}
+            {isTranslating
+              ? "Translating..."
+              : `Translate (${isMac ? "⌘" : "Ctrl"}-Enter)`}
           </button>
         </div>
       ) : null}
