@@ -118,7 +118,7 @@ const Player = (props: PlayerProps) => {
 				autoPlay
 				muted
 				playsInline
-				className={`bg-black max-w-full max-h-full`}
+				className={`bg-black max-w-full min-h-0`}
 			/>
 
 			{videoLayers.length >= 2 &&
