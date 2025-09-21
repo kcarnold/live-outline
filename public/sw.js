@@ -1,5 +1,5 @@
 // Simple service worker for PWA functionality
-const CACHE_NAME = 'live-outline-v2';
+const CACHE_NAME = 'live-notes-v1';
 const urlsToCache = [
   '/manifest.json',
   '/icon-192x192.png',

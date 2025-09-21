@@ -1,7 +1,7 @@
 {
-  "name": "Live Outline",
-  "short_name": "Live Outline",
-  "description": "Real-time transcript and translation webapp",
+  "name": "Live Notes",
+  "short_name": "Live Notes",
+  "description": "Real-time notes and translation webapp",
   "start_url": "/",
   "display": "fullscreen",
   "orientation": "portrait",
