@@ -1,5 +1,5 @@
 <svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
   <rect width="512" height="512" fill="#1f2937"/>
-  <circle cx="256" cy="256" r="200" fill="#60a5fa" stroke="#ffffff" stroke-width="8"/>
-  <text x="256" y="280" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle">LO</text>
+  <ellipse cx="256" cy="256" rx="250" ry="125" fill="#60a5fa" stroke="#ffffff" stroke-width="8"/>
+  <text x="256" y="256" font-family="Arial, sans-serif" font-size="90" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">LiveNotes</text>
 </svg>
