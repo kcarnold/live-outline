@@ -5,11 +5,11 @@ import { isEditorAtom, languages } from "./configAtoms";
 import ProseMirrorEditor from "./ProseMirrorEditor";
 import { useTranslationManager } from "./useTranslationManager";
 
-const isMac = (() => {
-  if (typeof navigator === "undefined") return false;
-  const platform = navigator.platform || "";
-  return /Mac|iPhone|iPad|iPod/.test(platform);
-})();
+// https://developer.mozilla.org/en-US/docs/Web/API/Navigator/platform#examples
+const modifierKeyPrefix =
+  navigator.platform.startsWith("Mac") || navigator.platform === "iPhone"
+    ? "⌘" // command key
+    : "^"; // control key
 
 export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
   const sourceTextRef = useRef("");
@@ -75,7 +75,7 @@ export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
           >
             {isTranslating
               ? "Translating..."
-              : `Translate (${isMac ? "⌘" : "Ctrl"}-Enter)`}
+              : `Translate (${modifierKeyPrefix}-Enter)`}
           </button>
         </div>
       ) : null}
