@@ -5,13 +5,13 @@ ENV NODE_ENV=production
 ENV PORT=5008
 WORKDIR /usr/src/app
 
-COPY yarn.lock package.json ./
+COPY package.json package-lock.json ./
 # Need to install dev dependencies to build the app.
-RUN yarn install --production=false
+RUN npm ci
 
 # Copy the rest of the source files into the image.
 COPY . .
-RUN yarn run build
+RUN npm run build
 
 # Run the application as a non-root user.
 USER node
