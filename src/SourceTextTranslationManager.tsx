@@ -23,7 +23,7 @@ export function SourceTextTranslationManager({ ydoc }: { ydoc: Y.Doc }) {
   } = useTranslationManager({
     languages,
     sourceTextRef,
-    translationCacheName: "outlineTranslationCache",
+    translationCacheName: "notesTranslationCache",
   });
 
   const doTranslationsSync = useCallback(() => {
