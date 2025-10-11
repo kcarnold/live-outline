@@ -54,7 +54,7 @@
 
   [data-clickable-block].loading {
     @apply bg-blue-100 dark:bg-blue-900;
-    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   @keyframes pulse {
