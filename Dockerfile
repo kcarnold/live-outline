@@ -4,6 +4,12 @@ EXPOSE 5008
 ENV PORT=5008
 WORKDIR /usr/src/app
 
+# Install ffmpeg
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
