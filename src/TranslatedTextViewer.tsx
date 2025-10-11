@@ -64,11 +64,18 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fon
       audioRef.current = null;
     }
 
-    setPlayingBlockKey(text);
+    // Find the block element and add loading class immediately
+    const blockElement = document.querySelector(`[data-block-text="${CSS.escape(text)}"]`);
+    if (blockElement) {
+      blockElement.classList.add('loading');
+    }
 
     const audioUrl = await fetchAudio(text);
     if (!audioUrl) {
-      setPlayingBlockKey(null);
+      // Remove loading class on error
+      if (blockElement) {
+        blockElement.classList.remove('loading');
+      }
       return;
     }
 
@@ -78,13 +85,27 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fon
     audio.onended = () => {
       setPlayingBlockKey(null);
       audioRef.current = null;
+      // Remove loading class when done
+      if (blockElement) {
+        blockElement.classList.remove('loading');
+      }
     };
 
     audio.onerror = () => {
       console.error('Audio playback error');
       setPlayingBlockKey(null);
       audioRef.current = null;
+      // Remove loading class on error
+      if (blockElement) {
+        blockElement.classList.remove('loading');
+      }
     };
+
+    // Remove loading class and set playing state when audio starts
+    if (blockElement) {
+      blockElement.classList.remove('loading');
+    }
+    setPlayingBlockKey(text);
 
     await audio.play();
   }, [fetchAudio]);
