@@ -15,10 +15,14 @@ RUN npm ci
 
 # Copy the rest of the source files into the image.
 COPY . .
+
+ENV NODE_ENV=production
 RUN npm run build
+
+# Create the audio cache directory and set permissions.
+RUN mkdir -p audio-cache && chown -R node:node audio-cache
 
 # Run the application as a non-root user.
 USER node
 
-ENV NODE_ENV=production
 CMD ["node", "server.ts"]
