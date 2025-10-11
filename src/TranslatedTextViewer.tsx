@@ -24,7 +24,7 @@ const TranslatedTextViewer: React.FC<TranslatedTextViewerProps> = ({ yJsKey, fon
 
   // Extract language from yJsKey (format: "translatedText-{Language}")
   const language = yJsKey.replace('translatedText-', '');
-  const isTTSEnabled = language === 'French';
+  const isTTSEnabled = language === 'French' || language === 'Spanish';
 
   // TTS state
   const [playingBlockKey, setPlayingBlockKey] = useState<string | null>(null);
