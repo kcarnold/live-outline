@@ -9,6 +9,7 @@ import {
   planRoomActions,
   assertPrimaryTargetIsPossible,
   primaryTargetLanguage,
+  resolveDefaultSourceLanguage,
   resolveSourceLanguage,
   TranslationSessionManager,
   type PresentParticipant,
@@ -141,6 +142,43 @@ describe("assertPrimaryTargetIsPossible", () => {
     // later reconcile tick — the same reason resolveWriteAuthConfig throws for
     // `enforce` with no keys.
     expect(() => assertPrimaryTargetIsPossible("en")).toThrow(/DEFAULT_LANGUAGE/);
+  });
+});
+
+describe("resolveDefaultSourceLanguage", () => {
+  it("accepts a supported code, and defaults an unset variable", () => {
+    expect(resolveDefaultSourceLanguage("es")).toBe("es");
+    expect(resolveDefaultSourceLanguage(undefined)).toBe("en");
+    expect(resolveDefaultSourceLanguage("  fr  ")).toBe("fr");
+  });
+
+  it("refuses a regioned tag rather than normalizing it away", () => {
+    // The value that motivated the check. `en-US` is valid BCP-47 and obviously means
+    // English, but it is not `en`, so primaryTargetLanguage would hand back `en` and the
+    // always-on bridge would translate English into English on the deployment's money.
+    // Stripping the region silently is the wrong repair: `pt-BR` is not `pt-PT`, and the
+    // code is a transcript doc key, so re-spelling it orphans what is already written.
+    expect(() => resolveDefaultSourceLanguage("en-US")).toThrow(/not a language/);
+    expect(() => resolveDefaultSourceLanguage("pt-BR")).toThrow(/not a language/);
+  });
+
+  it("refuses a differently-cased code, for the same reason", () => {
+    // BCP-47 is case-insensitive, so `EN` denotes English — but nothing downstream
+    // compares codes that way, and the code is a doc key, so case-folding here would
+    // orphan transcripts as surely as region-stripping would.
+    expect(() => resolveDefaultSourceLanguage("EN")).toThrow(/not a language/);
+  });
+
+  it("refuses a plausible synonym the list doesn't use", () => {
+    // `he` is the modern code for Hebrew; the Gemini Live set spells it `iw`. Being
+    // *more* correct than the list is still a code no bridge can be started for, and the
+    // error names the rule so an operator isn't left guessing.
+    expect(() => resolveDefaultSourceLanguage("he")).toThrow(/'iw', not 'he'/);
+    expect(resolveDefaultSourceLanguage("iw")).toBe("iw");
+  });
+
+  it("refuses outright nonsense too", () => {
+    expect(() => resolveDefaultSourceLanguage("klingon")).toThrow(/not a language/);
   });
 });
 

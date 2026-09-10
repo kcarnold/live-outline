@@ -25,6 +25,7 @@ import {
   normalizeSourceLanguage,
   writeSourceLanguage,
 } from "../src/liveAudioConfig.ts";
+import { isListenLanguage } from "../src/listenLanguages.ts";
 import type { ServerDoc } from "../serverDoc.ts";
 import { TranscriptSegmentLog } from "./transcript-log.ts";
 import { SILENCE_GATING_OFF_DBFS, TranslationBridge } from "./translation-bridge.ts";
@@ -179,6 +180,35 @@ export function assertPrimaryTargetIsPossible(defaultLanguage: string): void {
         `which would ask it to translate the talk into its own language.`
     );
   }
+}
+
+/**
+ * The deployment-wide fallback spoken language, validated.
+ *
+ * The sibling of {@link assertPrimaryTargetIsPossible}: both refuse, at boot, a
+ * configuration that could only fail later and quietly. This one covers the input that
+ * assertion can't see, because it is a deployment's to set rather than a constant —
+ * `LIVE_AUDIO_SOURCE_LANGUAGE`.
+ *
+ * The near miss is the dangerous value, not the nonsense one. `LIVE_AUDIO_SOURCE_LANGUAGE=xx`
+ * would fail visibly the moment a bridge tried to use it. `LIVE_AUDIO_SOURCE_LANGUAGE=en-US`
+ * boots, runs, and looks right: it is valid BCP-47, it is plainly what the operator meant,
+ * and it is not `en` — so `primaryTargetLanguage` hands back `en`, the always-on bridge
+ * spends money translating English into English, and no listener can select the result.
+ * Every comparison downstream is `===` on an opaque code, so there is no later point at
+ * which the mistake announces itself.
+ */
+export function resolveDefaultSourceLanguage(raw: unknown): string {
+  const code = normalizeSourceLanguage(raw);
+  if (!isListenLanguage(code)) {
+    throw new Error(
+      `LIVE_AUDIO_SOURCE_LANGUAGE='${code}' is not a language the live-audio pipeline ` +
+        `supports. It must be one of the codes in src/listenLanguages.ts exactly — a bare ` +
+        `subtag ('en', not 'en-US'), and the code that list uses where two exist ` +
+        `('iw', not 'he').`
+    );
+  }
+  return code;
 }
 
 /**

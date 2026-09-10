@@ -55,7 +55,11 @@ Optional environment variables:
   nobody declares one (default `en`). The broadcast pane asks the speaker and publishes their
   answer per session; this is only the fallback, for older clients and the macOS audio feeder.
   However it is resolved, the supervisor mirrors it into the doc's `liveAudioConfig`.
-  See [src/liveAudioConfig.ts](src/liveAudioConfig.ts).
+  Must be one of the codes in [src/listenLanguages.ts](src/listenLanguages.ts) *exactly* — a
+  bare subtag (`en`, not `en-US`) and that list's spelling where two exist (`iw`, not `he`).
+  The server refuses to start otherwise (it logs the error and never listens): codes are
+  opaque tokens compared with `===` everywhere downstream, so a near miss is silently
+  "some other language" rather than an error. See [src/liveAudioConfig.ts](src/liveAudioConfig.ts).
 - `LIVE_AUDIO_SILENCE_THRESHOLD_DBFS` - dBFS voice bar for the live-audio cost path; a bridge suspends its Gemini session after ~30s below it (`-30` is a guess, never validated against a real room). Unset = off, no suspending. Beware the sign: dBFS is negative, so `0` gates hardest, not least. goaway/reconnect fixes and the always-on default translator are independent of this. See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md).
 - `VITE_PUBLIC_POSTHOG_KEY` - PostHog analytics key (for usage tracking)
 - `VITE_PUBLIC_POSTHOG_HOST` - PostHog host URL (default: https://us.i.posthog.com)
