@@ -31,9 +31,12 @@ import { buildSessionExport, renderSessionHtml, sessionExportFilename } from './
 
 import { AccessToken } from 'livekit-server-sdk';
 import { SimulateScenarioKind } from '@livekit/rtc-node';
-import TranslationSessionManager, { SPEAKS_ATTRIBUTE } from './live-audio/translation-session-manager.ts';
+import TranslationSessionManager, {
+  SPEAKS_ATTRIBUTE,
+  resolveDefaultSourceLanguage,
+} from './live-audio/translation-session-manager.ts';
 import { parseSilenceThresholdDbfs } from './live-audio/translation-bridge.ts';
-import { normalizeSourceLanguage } from './src/liveAudioConfig.ts';
+import { isListenLanguage } from './src/listenLanguages.ts';
 import { connectServerDoc } from './serverDoc.ts';
 import { WriteAuth, auditDistinctId, formatAudit, resolveWriteAuthConfig } from './writeAuth.ts';
 import {
@@ -356,7 +359,10 @@ const SILENCE_THRESHOLD_DBFS = parseSilenceThresholdDbfs(process.env.LIVE_AUDIO_
 // language — an older client, or the unattended macOS audio feeder, which publishes as
 // organizer with no UI to ask. Browsers say so per session (see src/liveAudioConfig.ts);
 // this is the deployment-wide fallback, and `en` keeps every existing install as it was.
-const DEFAULT_SOURCE_LANGUAGE_ENV = normalizeSourceLanguage(process.env.LIVE_AUDIO_SOURCE_LANGUAGE);
+// Validated, not merely normalized: a code this pipeline can't carry is refused here
+// rather than at the first bridge that tries to use it. See
+// resolveDefaultSourceLanguage for why `en-US` is the value worth catching.
+const DEFAULT_SOURCE_LANGUAGE_ENV = resolveDefaultSourceLanguage(process.env.LIVE_AUDIO_SOURCE_LANGUAGE);
 
 // Give the translation manager what it needs to persist transcripts into Yjs and
 // reap idle translator bots. No-op for transcript/reaper if LiveKit is unconfigured.
@@ -404,6 +410,22 @@ app.post('/api/livekit/token', makeOrganizerGate(writeAuth), async (req, res) =>
     const role = parseLiveKitRole(req.body?.role);
     if (!role) {
       return res.status(400).json({ error: 'Unknown role' });
+    }
+    // Both language fields ride into the room as participant attributes, and the
+    // supervisor reads presence as demand: `listen` names a bridge to start (a paid
+    // Gemini session), `speaks` decides which code the whole room's transcripts are
+    // filed under. Neither is compared against anything but `===`, so an unsupported
+    // code is never noticed downstream — it just quietly means "some other language".
+    // Refused here, where the request that introduced it is still in hand. Both clients
+    // pick from the same list, so a request reaching this only comes from a stale tab or
+    // a hand-made call.
+    for (const [field, code] of [
+      ['listenLanguage', listenLanguage],
+      ['speakLanguage', speakLanguage],
+    ] as const) {
+      if (code !== undefined && !isListenLanguage(code)) {
+        return res.status(400).json({ error: `Unsupported ${field}` });
+      }
     }
 
     // Organizer requests were already gated by makeOrganizerGate above; anything that

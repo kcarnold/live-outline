@@ -54,6 +54,24 @@ export function listenFavorites(sourceLanguage: string): string[] {
   return LISTEN_FAVORITES.filter((c) => c !== sourceLanguage);
 }
 
+/**
+ * Is this a code the live-audio pipeline can actually carry?
+ *
+ * The boundary check for every language code that enters the system from outside it — a
+ * `listen-{code}` URL, and the `speakLanguage` / `listenLanguage` fields of a LiveKit
+ * token request. Everything downstream treats a code as an opaque token compared with
+ * `===` (which transcript Y.Array it writes, whether a listener wants "Original", which
+ * bridges the supervisor runs), so a code that is merely *plausible* rather than one of
+ * these is not a near miss — it is a second spelling of a language the system already
+ * has, and every one of those comparisons silently answers "different".
+ *
+ * `en-US` is the case that motivated this. It is a perfectly good BCP-47 tag, it is not
+ * `en`, and declaring it as the spoken language buys a paid Gemini bridge translating
+ * English into English that no listener can select. Normalizing it away would be worse:
+ * the region subtag is real information (`pt-BR` is not `pt-PT`), and the code is a doc
+ * key, so re-spelling it orphans transcripts already written. So the codes stay opaque
+ * and this refuses anything that isn't one of them.
+ */
 export function isListenLanguage(code: string): boolean {
   return LISTEN_LANGUAGE_CODES.includes(code);
 }

@@ -13,6 +13,7 @@ import { FontSizeControls } from "./FontSizeControls";
 import { useStrings, resolveLocale, LANGUAGE_BCP47 } from "./useLocale";
 import {
   LISTEN_LANGUAGE_CODES,
+  isListenLanguage,
   listenFavorites,
   defaultListenCode,
 } from "./listenLanguages";
@@ -100,10 +101,9 @@ function HomePage() {
   // The listen pane is keyed by BCP-47 code (a larger set than our text-translation
   // languages). Map the selected language to its code, falling back to the default
   // listen language if Gemini Live doesn't support it (e.g. Haitian Creole).
-  const listenCode =
-    LISTEN_LANGUAGE_CODES.includes(LANGUAGE_BCP47[selectedLang])
-      ? LANGUAGE_BCP47[selectedLang]
-      : defaultListenCode(sourceLanguage);
+  const listenCode = isListenLanguage(LANGUAGE_BCP47[selectedLang])
+    ? LANGUAGE_BCP47[selectedLang]
+    : defaultListenCode(sourceLanguage);
 
   // Substitute the selected language into a layout component's bare name.
   const applyLanguage = (component: string): string => {
@@ -303,8 +303,10 @@ function PagePart({ componentStr, onReplace }: { componentStr: string; onReplace
 
   if (componentStr.startsWith('listen-')) {
     const language = componentStr.substring('listen-'.length);
+    // "Or the spoken language" is the whole reason this isn't a bare isListenLanguage:
+    // "Original" is a legitimate choice that is deliberately absent from the code list.
     const validLanguage =
-      language === sourceLanguage || LISTEN_LANGUAGE_CODES.includes(language)
+      language === sourceLanguage || isListenLanguage(language)
         ? language
         : defaultListenCode(sourceLanguage);
     return (

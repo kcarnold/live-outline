@@ -23,8 +23,8 @@ import { isEditorAtom } from "./configAtoms";
 import { useStrings, resolveLocale } from "./useLocale";
 import { LiveTranscript } from "./LiveTranscript";
 import { FontSizeControls } from "./FontSizeControls";
-import { LISTEN_LANGUAGE_CODES } from "./listenLanguages";
-import { writeSourceLanguage } from "./liveAudioConfig";
+import { LISTEN_LANGUAGE_CODES, isListenLanguage } from "./listenLanguages";
+import { DEFAULT_SOURCE_LANGUAGE, writeSourceLanguage } from "./liveAudioConfig";
 import { useSourceLanguage } from "./useSourceLanguage";
 import { getDocId } from "./getDocId";
 import { apiFetch } from "./writeKey";
@@ -182,7 +182,12 @@ export function BroadcastControl() {
   // until this speaker picks something — so re-opening the pane mid-service shows the
   // language in force rather than resetting the picker to a default that would then be
   // published on the next "Start broadcast".
-  const declaredSourceLanguage = useSourceLanguage();
+  // ...but only if the session's stored code is one this pipeline can carry. The server
+  // refuses an unsupported `speakLanguage` now, and a doc holding a stale or hand-written
+  // code would otherwise turn that refusal into "the speaker can't go live" at the worst
+  // possible moment. It would also render the picker blank, since the code is in no option.
+  const declared = useSourceLanguage();
+  const declaredSourceLanguage = isListenLanguage(declared) ? declared : DEFAULT_SOURCE_LANGUAGE;
   const [picked, setPicked] = useState<string | null>(null);
   const spokenLanguage = picked ?? declaredSourceLanguage;
 
